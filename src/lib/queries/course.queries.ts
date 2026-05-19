@@ -58,7 +58,7 @@ function mapCourse(course: CourseWithRelations, learnerId?: string): CourseDto {
     thumbnailUrl:
       course.thumbnailUrl ??
       "https://images.unsplash.com/photo-1515879218367-8466d910aaa4?auto=format&fit=crop&w=900&q=80",
-    rating: avgRating || 4.5,
+    rating: avgRating,
     reviews: ratedEnrollments.length || 0,
     duration: Math.max(1, Math.ceil(lessonDuration / 60)),
     tutorId: course.tutorId,

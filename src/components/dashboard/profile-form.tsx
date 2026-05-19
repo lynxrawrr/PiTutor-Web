@@ -16,6 +16,9 @@ type ProfileFormProps = {
     name: string;
     email: string;
     avatarUrl?: string | null;
+    role?: string;
+    headline?: string;
+    bio?: string;
   };
 };
 
@@ -28,6 +31,8 @@ export function ProfileForm({ user }: ProfileFormProps) {
   const [email, setEmail] = useState(user.email);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [headline, setHeadline] = useState(user.headline || "");
+  const [bio, setBio] = useState(user.bio || "");
 
   async function handleAvatarUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -66,6 +71,8 @@ export function ProfileForm({ user }: ProfileFormProps) {
           name,
           email,
           password: password || undefined,
+          headline: user.role === "TUTOR" ? headline : undefined,
+          bio: user.role === "TUTOR" ? bio : undefined,
         });
         toast.success("Profil berhasil diperbarui!");
         setPassword("");
@@ -135,7 +142,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
             </label>
 
             <label className="block sm:col-span-2">
-              <span className="text-sm font-bold text-slate-600">Email Kampus</span>
+              <span className="text-sm font-bold text-slate-600">Alamat Email</span>
               <input
                 required
                 type="email"
@@ -144,6 +151,30 @@ export function ProfileForm({ user }: ProfileFormProps) {
                 className="mt-2 h-12 w-full rounded-2xl border border-slate-200 bg-slate-50/30 px-4 font-medium outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-600/5"
               />
             </label>
+
+            {user.role === "TUTOR" && (
+              <>
+                <label className="block sm:col-span-2">
+                  <span className="text-sm font-bold text-slate-600">Headline Profesional</span>
+                  <input
+                    value={headline}
+                    onChange={(e) => setHeadline(e.target.value)}
+                    placeholder="Contoh: Senior Tutor React & Node.js"
+                    className="mt-2 h-12 w-full rounded-2xl border border-slate-200 bg-slate-50/30 px-4 font-medium outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-600/5"
+                  />
+                </label>
+
+                <label className="block sm:col-span-2">
+                  <span className="text-sm font-bold text-slate-600">Bio / Deskripsi</span>
+                  <textarea
+                    value={bio}
+                    onChange={(e) => setBio(e.target.value)}
+                    placeholder="Ceritakan sedikit tentang dirimu..."
+                    className="mt-2 min-h-32 w-full rounded-2xl border border-slate-200 bg-slate-50/30 p-4 font-medium outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-600/5"
+                  />
+                </label>
+              </>
+            )}
 
             <label className="block">
               <span className="text-sm font-bold text-slate-600">Password Baru</span>

@@ -17,7 +17,7 @@ export function PageToolbar({
 }: PageToolbarProps) {
   return (
     <div className="flex flex-col gap-3 sm:flex-row">
-      <label className="flex h-12 min-w-72 items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 shadow-sm">
+      <label className="flex h-12 flex-1 items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 shadow-sm sm:min-w-72">
         <Search className="size-5 text-slate-400" aria-hidden="true" />
         <span className="sr-only">{searchPlaceholder}</span>
         <input

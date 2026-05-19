@@ -46,7 +46,8 @@ export function DashboardSidebar({
   onNavigate?: () => void;
 }) {
   const pathname = usePathname();
-  const navItems = navItemsByRole[user.role];
+  const isPendingTutor = user.role === "TUTOR" && pathname === "/dashboard/tutor/pending";
+  const navItems = isPendingTutor ? [] : navItemsByRole[user.role];
 
   return (
     <aside

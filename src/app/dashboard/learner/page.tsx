@@ -19,6 +19,7 @@ import { Progress } from "@/components/ui/progress";
 import { requireUser } from "@/lib/auth";
 import { getCourseList } from "@/lib/queries/course.queries";
 import { getLearnerBookings } from "@/lib/queries/mentoring.queries";
+import { getLearnerStats } from "@/lib/queries/user.queries";
 
 export default async function LearnerDashboardPage() {
   const user = await requireUser();
@@ -30,9 +31,10 @@ export default async function LearnerDashboardPage() {
   else if (hour >= 12 && hour < 15) greeting = "Selamat siang";
   else if (hour >= 15 && hour < 18) greeting = "Selamat sore";
 
-  const [courses, bookings] = await Promise.all([
+  const [courses, bookings, stats] = await Promise.all([
     getCourseList(),
     getLearnerBookings(),
+    getLearnerStats(user.id),
   ]);
   const learningItems = courses.filter((course) => course.enrolled);
   const visibleLearningItems = learningItems.length > 0 ? learningItems : courses;
@@ -46,15 +48,15 @@ export default async function LearnerDashboardPage() {
         transition={{ duration: 0.5 }}
         className="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-blue-600 via-blue-600 to-indigo-700 px-8 py-12 text-white shadow-2xl shadow-blue-600/20 md:px-12"
       >
-        <div className="relative z-10 max-w-2xl">
+        <div className="relative z-10 max-w-5xl">
           <h1 className="text-4xl font-black tracking-tight md:text-5xl">
             {greeting}, {firstName}! 🎓
           </h1>
           <p className="mt-5 text-lg leading-relaxed text-blue-50/90">
             Terus pertahankan semangat belajarmu! Kamu memiliki{" "}
-            <span className="font-bold text-white">2 materi</span> yang belum
-            diselesaikan dan <span className="font-bold text-white">1 jadwal</span>{" "}
-            mentoring hari ini.
+            <span className="font-bold text-white">{learningItems.length} materi</span> yang sedang dipelajari dan{" "}
+            <span className="font-bold text-white">{bookings.filter(b => b.status === 'ACCEPTED').length} jadwal</span>{" "}
+            mentoring mendatang.
           </p>
           <div className="mt-10 flex flex-wrap gap-4">
             <Link
@@ -89,29 +91,29 @@ export default async function LearnerDashboardPage() {
       <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
         <StatCard
           icon={Clock3}
-          value="24.5"
+          value={String(stats.learningHours)}
           label="Jam Belajar"
-          helper="+2.5 jam minggu ini"
+          helper="Total waktu belajar"
         />
         <StatCard
           icon={CheckCircle2}
-          value="12"
+          value={String(stats.completedCourses)}
           label="Course Selesai"
-          helper="Dari 15 terdaftar"
+          helper={`Dari ${stats.totalEnrolled} terdaftar`}
           tone="green"
         />
         <StatCard
           icon={Star}
-          value="88"
+          value={String(stats.averageScore)}
           label="Skor Rata-rata"
-          helper="Top 15% di kampus"
+          helper="Performa kuis"
           tone="orange"
         />
         <StatCard
           icon={TrendingUp}
-          value="#42"
+          value={stats.ranking}
           label="Peringkat"
-          helper="Naik 5 posisi"
+          helper="Berdasarkan performa"
           tone="purple"
         />
       </section>
@@ -174,8 +176,16 @@ export default async function LearnerDashboardPage() {
           <Card className="overflow-hidden p-6">
             <div className="flex gap-5">
               <div className="flex size-16 shrink-0 flex-col items-center justify-center rounded-2xl bg-purple-50 font-black text-purple-700">
-                <span className="text-sm">MEI</span>
-                <span className="text-2xl">18</span>
+                <span className="text-sm uppercase">
+                  {nextBooking?.startsAt 
+                    ? new Intl.DateTimeFormat("id-ID", { month: "short" }).format(nextBooking.startsAt) 
+                    : "MEI"}
+                </span>
+                <span className="text-2xl">
+                  {nextBooking?.startsAt 
+                    ? new Intl.DateTimeFormat("id-ID", { day: "numeric" }).format(nextBooking.startsAt) 
+                    : "18"}
+                </span>
               </div>
               <div>
                 <h3 className="text-xl font-black text-slate-950">
@@ -186,9 +196,9 @@ export default async function LearnerDashboardPage() {
                 </p>
                 <div className="mt-4 flex items-center gap-2 text-sm text-slate-600">
                   <Image
-                    className="size-7 rounded-full object-cover"
-                    src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=120&q=80"
-                    alt="Budi Santoso"
+                    className="size-7 rounded-full object-cover bg-slate-100"
+                    src={nextBooking?.mentorAvatar || "/vercel.svg"}
+                    alt={nextBooking?.mentorName || "Mentor"}
                     width={28}
                     height={28}
                   />

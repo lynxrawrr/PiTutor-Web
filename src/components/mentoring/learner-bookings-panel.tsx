@@ -7,6 +7,7 @@ import { useState, useTransition } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 import { submitMentorReview } from "@/lib/actions/mentoring.actions";
 import { useBookings } from "@/hooks/use-mentoring";
 

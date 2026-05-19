@@ -16,6 +16,7 @@ const toneClasses = {
   green: "bg-emerald-50 text-emerald-600",
   orange: "bg-orange-50 text-orange-600",
   purple: "bg-purple-50 text-purple-600",
+  cyan: "bg-cyan-50 text-cyan-600",
 };
 
 export function StatCard({

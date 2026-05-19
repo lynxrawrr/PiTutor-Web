@@ -19,7 +19,9 @@ const updateScheduleSchema = z
   })
   .refine(
     (value) =>
-      !value.startsAt || !value.endsAt || value.endsAt > value.startsAt,
+      !value.startsAt ||
+      !value.endsAt ||
+      value.endsAt.getTime() > value.startsAt.getTime(),
     {
       message: "Waktu selesai harus setelah waktu mulai.",
       path: ["endsAt"],

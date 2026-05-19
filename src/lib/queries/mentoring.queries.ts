@@ -9,9 +9,25 @@ async function fetchMentors() {
   return prisma.tutorProfile.findMany({
     include: {
       user: true,
+      bookings: {
+        where: {
+          status: "COMPLETED",
+          rating: { not: null },
+        },
+        select: {
+          rating: true,
+        },
+      },
       schedules: {
         orderBy: {
           startsAt: "asc",
+        },
+      },
+      _count: {
+        select: {
+          bookings: {
+            where: { status: "COMPLETED" },
+          },
         },
       },
     },
@@ -62,18 +78,24 @@ function formatScheduleTime(startsAt: Date, endsAt: Date) {
 }
 
 function mapMentor(mentor: MentorWithRelations): MentorDto {
+  const completedBookings = mentor.bookings || [];
+  const totalReviews = completedBookings.length;
+  const avgRating =
+    totalReviews > 0
+      ? completedBookings.reduce((acc, curr) => acc + (curr.rating || 0), 0) /
+        totalReviews
+      : 0;
+
   return {
     id: mentor.id,
     name: mentor.user.name,
     headline: mentor.headline ?? "Mentor Pitutor",
     bio: mentor.bio ?? "Siap membantu sesi belajar 1-on-1.",
-    avatarUrl:
-      mentor.user.avatarUrl ??
-      "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=300&q=80",
+    avatarUrl: mentor.user.avatarUrl ?? "/vercel.svg",
     expertise: mentor.expertise,
     hourlyRate: mentor.hourlyRate ?? 50000,
-    rating: mentor.rating,
-    totalSessions: mentor.totalReviews,
+    rating: avgRating,
+    totalSessions: mentor._count?.bookings ?? 0,
     verified: mentor.verified,
     availableTomorrow: mentor.schedules.some((schedule) => !schedule.isBooked),
     schedules: mentor.schedules.map((schedule) => ({
@@ -97,8 +119,10 @@ function mapBooking(booking: BookingWithRelations): BookingDto {
     id: booking.id,
     learnerName: booking.learner.name,
     mentorName: booking.tutor.user.name,
+    mentorAvatar: booking.tutor.user.avatarUrl,
     topic: booking.topic,
     schedule,
+    startsAt: booking.schedule?.startsAt ?? null,
     status: booking.status,
     meetingUrl: booking.meetingUrl,
     rating: booking.rating,
@@ -120,9 +144,25 @@ export async function getMentorProfile(id: string) {
     },
     include: {
       user: true,
+      bookings: {
+        where: {
+          status: "COMPLETED",
+          rating: { not: null },
+        },
+        select: {
+          rating: true,
+        },
+      },
       schedules: {
         orderBy: {
           startsAt: "asc",
+        },
+      },
+      _count: {
+        select: {
+          bookings: {
+            where: { status: "COMPLETED" },
+          },
         },
       },
     },

@@ -5,7 +5,7 @@ export const createScheduleSchema = z
     startsAt: z.coerce.date(),
     endsAt: z.coerce.date(),
   })
-  .refine((value) => value.endsAt > value.startsAt, {
+  .refine((value) => value.endsAt.getTime() > value.startsAt.getTime(), {
     message: "Waktu selesai harus setelah waktu mulai.",
     path: ["endsAt"],
   });

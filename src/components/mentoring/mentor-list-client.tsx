@@ -51,7 +51,7 @@ export function MentorListClient() {
       {isError ? <ErrorState message="Data mentor gagal dimuat." /> : null}
 
       {isLoading ? (
-        <section className="grid gap-6 xl:grid-cols-2 2xl:grid-cols-3">
+        <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3">
           {Array.from({ length: 6 }).map((_, index) => (
             <Card key={index} className="p-6">
               <div className="flex gap-4">
@@ -77,12 +77,12 @@ export function MentorListClient() {
       ) : null}
 
       {!isLoading && filteredMentors.length > 0 ? (
-        <section className="grid gap-6 xl:grid-cols-2 2xl:grid-cols-3">
+        <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3">
           {filteredMentors.map((mentor) => (
             <Card key={mentor.id} className="p-6">
               <div className="flex gap-4">
                 <Image
-                  className="size-24 rounded-2xl object-cover ring-4 ring-slate-100"
+                  className="size-24 rounded-2xl object-cover ring-4 ring-slate-100 bg-slate-50"
                   src={mentor.avatarUrl}
                   alt={mentor.name}
                   width={96}

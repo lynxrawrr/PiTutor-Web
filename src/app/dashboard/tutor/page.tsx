@@ -21,7 +21,7 @@ export default async function TutorDashboardPage() {
       <AutoRefresh />
       <section className="rounded-3xl bg-gradient-to-br from-purple-600 to-blue-600 px-8 py-10 text-white shadow-2xl shadow-purple-600/20">
         <h1 className="text-4xl font-black">Dashboard Tutor</h1>
-        <p className="mt-3 max-w-3xl text-lg text-purple-50">
+        <p className="mt-3 max-w-5xl pl-1 text-lg text-purple-50">
           Kelola course, tambah lesson video embed, atur jadwal mentoring, dan
           respon booking learner.
         </p>

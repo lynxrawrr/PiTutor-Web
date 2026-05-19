@@ -7,6 +7,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { requireRole } from "@/lib/auth";
 import { getTutorCourses } from "@/lib/queries/course.queries";
+import { formatStatus } from "@/lib/utils";
 
 export default async function TutorCoursesPage() {
   await requireRole(["TUTOR", "ADMIN"]);
@@ -55,7 +56,7 @@ export default async function TutorCoursesPage() {
                     : "slate"
               }
             >
-              {course.status}
+              {formatStatus(course.status)}
             </Badge>
             <span className="font-bold text-slate-600">
               {course.lessons.length} lesson

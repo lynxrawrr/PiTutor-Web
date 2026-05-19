@@ -31,7 +31,7 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
         <DashboardSidebar user={user} />
         <div className="min-w-0 flex-1">
           <DashboardTopbar user={user} onMenuClick={() => setMobileOpen(true)} />
-          <main className="mx-auto w-full max-w-7xl px-4 py-8 md:px-8">
+          <main className="w-full px-6 py-8 md:px-12">
             {children}
           </main>
         </div>

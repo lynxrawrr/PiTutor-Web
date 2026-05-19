@@ -6,14 +6,23 @@ import { z } from "zod";
 
 import { requireRole, requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { selectableRoleSchema } from "@/lib/validations/auth.validation";
 
 const updateAccountSchema = z.object({
   name: z.string().min(2, "Nama minimal 2 karakter."),
   email: z.string().email("Email tidak valid."),
-  password: z.string().min(6, "Password minimal 6 karakter.").optional().or(z.literal("")),
+  password: z
+    .string()
+    .min(6, "Password minimal 6 karakter.")
+    .optional()
+    .or(z.literal("")),
+  headline: z.string().optional(),
+  bio: z.string().optional(),
 });
 
-export async function updateAccountAction(input: z.infer<typeof updateAccountSchema>) {
+export async function updateAccountAction(
+  input: z.infer<typeof updateAccountSchema>,
+) {
   const user = await requireUser();
   const data = updateAccountSchema.parse(input);
 
@@ -30,9 +39,21 @@ export async function updateAccountAction(input: z.infer<typeof updateAccountSch
     updateData.passwordHash = await hash(data.password, 12);
   }
 
-  await prisma.user.update({
-    where: { id: user.id },
-    data: updateData,
+  await prisma.$transaction(async (tx) => {
+    await tx.user.update({
+      where: { id: user.id },
+      data: updateData,
+    });
+
+    if (user.role === "TUTOR") {
+      await tx.tutorProfile.update({
+        where: { userId: user.id },
+        data: {
+          headline: data.headline,
+          bio: data.bio,
+        },
+      });
+    }
   });
 
   revalidatePath("/dashboard", "layout");
@@ -62,17 +83,18 @@ export async function createUserProfile(input: z.infer<typeof profileSchema>) {
 
 export async function updateUserRole(
   userId: string,
-  role: "LEARNER" | "TUTOR" | "ADMIN",
+  role: "LEARNER" | "TUTOR",
 ) {
   await requireRole(["ADMIN"]);
+  const selectedRole = selectableRoleSchema.parse(role);
 
   const user = await prisma.user.update({
     where: { id: userId },
     data: {
-      role,
+      role: selectedRole,
       roleSelected: true,
       learnerProfile:
-        role === "LEARNER"
+        selectedRole === "LEARNER"
           ? {
               upsert: {
                 update: {},
@@ -83,7 +105,7 @@ export async function updateUserRole(
             }
           : undefined,
       tutorProfile:
-        role === "TUTOR"
+        selectedRole === "TUTOR"
           ? {
               upsert: {
                 update: {},
@@ -141,7 +163,7 @@ export async function updateTutorProfile(input: {
 
 export async function updateAvatarUrl(url: string) {
   const user = await requireUser();
-  
+
   await prisma.user.update({
     where: { id: user.id },
     data: { avatarUrl: url },

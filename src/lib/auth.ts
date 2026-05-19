@@ -191,6 +191,20 @@ export async function requireRole(roles: AppRole[]) {
     redirect("/onboarding");
   }
 
+  if (user.role === "TUTOR") {
+    const tutor = await prisma.tutorProfile.findUnique({
+      where: { userId: user.id },
+    });
+
+    if (tutor && !tutor.verified) {
+      // If we are already on the pending page, don't redirect again
+      // We'll use a specific path for pending verification
+      if (roles.includes("TUTOR")) {
+        redirect("/dashboard/tutor/pending");
+      }
+    }
+  }
+
   if (!roles.includes(user.role)) {
     redirect(`/dashboard/${user.role.toLowerCase()}`);
   }

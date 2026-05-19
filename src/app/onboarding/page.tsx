@@ -23,12 +23,6 @@ const roles: Array<{
     description: "Membuat course, mengatur jadwal, dan menerima booking.",
     icon: Users,
   },
-  {
-    label: "Admin",
-    role: "ADMIN",
-    description: "Review course, verifikasi mentor, dan kelola quiz.",
-    icon: ShieldCheck,
-  },
 ];
 
 export default async function OnboardingPage() {
@@ -52,7 +46,7 @@ export default async function OnboardingPage() {
           membatasi akses dashboard learner, tutor, dan admin.
         </p>
 
-        <div className="mt-7 grid gap-4 md:grid-cols-3">
+        <div className="mt-7 grid gap-4 sm:grid-cols-2">
           {roles.map((role) => {
             const Icon = role.icon;
 

@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { requireRole } from "@/lib/auth";
 import { getTutorCourses } from "@/lib/queries/course.queries";
+import { formatStatus } from "@/lib/utils";
 
 export default async function AdminCoursesPage() {
   await requireRole(["ADMIN"]);
@@ -34,7 +35,7 @@ export default async function AdminCoursesPage() {
                         : "slate"
                   }
                 >
-                  {course.status}
+                  {formatStatus(course.status)}
                 </Badge>
                 <h2 className="mt-3 text-xl font-black text-slate-950">
                   {course.title}

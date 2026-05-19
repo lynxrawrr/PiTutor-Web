@@ -32,8 +32,8 @@ export default async function AdminMentorsPage() {
           <Card key={mentor.id} className="p-6">
             <div className="flex gap-4">
               <Image
-                className="size-20 rounded-2xl object-cover"
-                src={mentor.user.avatarUrl ?? "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=160&q=80"}
+                className="size-20 rounded-2xl object-cover bg-slate-100"
+                src={mentor.user.avatarUrl || "/vercel.svg"}
                 alt={mentor.user.name}
                 width={80}
                 height={80}
@@ -42,6 +42,7 @@ export default async function AdminMentorsPage() {
                 <h2 className="text-xl font-black text-slate-950">
                   {mentor.user.name}
                 </h2>
+                <p className="text-sm font-medium text-blue-600">{mentor.user.email}</p>
                 <p className="mt-1 text-slate-500">{mentor.headline ?? "Tutor Pitutor"}</p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {mentor.expertise.map((skill) => (

@@ -118,16 +118,24 @@ export function CourseCatalogClient() {
                 </div>
                 <div className="p-5">
                   <div className="flex items-center gap-1 text-sm">
-                    <Star
-                      className="size-5 fill-amber-400 text-amber-400"
-                      aria-hidden="true"
-                    />
-                    <span className="font-black text-slate-900">
-                      {course.rating.toFixed(1)}
-                    </span>
-                    <span className="text-slate-400">
-                      ({course.reviews} ulasan)
-                    </span>
+                    {course.reviews > 0 ? (
+                      <>
+                        <Star
+                          className="size-5 fill-amber-400 text-amber-400"
+                          aria-hidden="true"
+                        />
+                        <span className="font-black text-slate-900">
+                          {course.rating.toFixed(1)}
+                        </span>
+                        <span className="text-slate-400">
+                          ({course.reviews} ulasan)
+                        </span>
+                      </>
+                    ) : (
+                      <span className="font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-lg text-xs uppercase tracking-wider">
+                        Baru
+                      </span>
+                    )}
                   </div>
                   <h2 className="mt-3 text-xl font-black text-slate-950">
                     {course.title}

@@ -9,6 +9,7 @@ import { LessonActions } from "@/components/tutor/lesson-actions";
 import { CourseReviewActions } from "@/components/admin/course-review-actions";
 import { requireRole, requireUser } from "@/lib/auth";
 import { getCourseDetail } from "@/lib/queries/course.queries";
+import { formatStatus } from "@/lib/utils";
 
 export default async function TutorCoursePreviewPage({
   params,
@@ -59,7 +60,7 @@ export default async function TutorCoursePreviewPage({
                   : "slate"
             }
           >
-            {course.status}
+            {formatStatus(course.status)}
           </Badge>
           <h1 className="text-4xl font-black text-slate-950 leading-tight">{course.title}</h1>
           <p className="max-w-3xl text-lg leading-relaxed text-slate-500 font-medium">

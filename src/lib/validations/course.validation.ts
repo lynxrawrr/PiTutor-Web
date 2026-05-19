@@ -5,7 +5,19 @@ import { getVideoEmbedUrl } from "@/lib/utils/video";
 const optionalUrl = z
   .string()
   .trim()
-  .url("URL tidak valid.")
+  .refine(
+    (val) => {
+      if (!val) return true;
+      if (val.startsWith("/")) return true;
+      try {
+        new URL(val);
+        return true;
+      } catch {
+        return false;
+      }
+    },
+    { message: "URL tidak valid." },
+  )
   .optional()
   .or(z.literal(""));
 

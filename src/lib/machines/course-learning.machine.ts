@@ -80,6 +80,7 @@ export const courseLearningMachine = setup({
           actions: ["setSelectedLesson", "clearError"],
         },
         BACK_TO_COURSE: "courseOverview",
+        COURSE_COMPLETED: "courseCompleted",
       },
     },
     loadingVideo: {
@@ -91,6 +92,7 @@ export const courseLearningMachine = setup({
         VIDEO_READY: "watchingVideo",
         VIDEO_ERROR: { target: "videoError", actions: "setError" },
         BACK_TO_LESSONS: "lessonList",
+        COURSE_COMPLETED: "courseCompleted",
       },
     },
     watchingVideo: {
@@ -102,18 +104,14 @@ export const courseLearningMachine = setup({
         MARK_COMPLETE: "savingProgress",
         VIDEO_ERROR: { target: "videoError", actions: "setError" },
         BACK_TO_LESSONS: "lessonList",
+        COURSE_COMPLETED: "courseCompleted",
       },
     },
     savingProgress: {
       on: {
-        SAVE_SUCCESS: "checkingCompletion",
-        SAVE_FAILED: { target: "watchingVideo", actions: "setError" },
-      },
-    },
-    checkingCompletion: {
-      on: {
+        SAVE_SUCCESS: "lessonList",
         COURSE_COMPLETED: "courseCompleted",
-        MORE_LESSONS_AVAILABLE: "lessonList",
+        SAVE_FAILED: { target: "watchingVideo", actions: "setError" },
       },
     },
     videoError: {

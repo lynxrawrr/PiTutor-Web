@@ -98,7 +98,7 @@ export function DashboardTopbar({ user, onMenuClick }: DashboardTopbarProps) {
           </Button>
 
           {showNotifications && (
-            <div className="absolute right-0 mt-4 w-80 rounded-3xl border border-slate-100 bg-white p-5 shadow-2xl shadow-blue-950/10 ring-1 ring-slate-950/5">
+            <div className="absolute -right-12 sm:right-0 mt-4 w-[calc(100vw-2rem)] sm:w-80 rounded-3xl border border-slate-100 bg-white p-5 shadow-2xl shadow-blue-950/10 ring-1 ring-slate-950/5">
               <div className="flex items-center justify-between">
                 <p className="font-black text-slate-950">Notifikasi</p>
                 <button 

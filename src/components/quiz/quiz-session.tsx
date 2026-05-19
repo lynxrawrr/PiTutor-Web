@@ -98,9 +98,9 @@ export function QuizSession({ quiz }: { quiz: QuizDto }) {
     return (
       <Card className="mx-auto max-w-3xl p-8 text-center shadow-xl shadow-slate-200/50">
         <Badge variant="orange">{quiz.category}</Badge>
-        <h1 className="mt-4 text-4xl font-black text-slate-950">{quiz.title}</h1>
-        <p className="mt-4 text-lg text-slate-500 leading-relaxed max-w-xl mx-auto">{quiz.description}</p>
-        <div className="mt-8 flex justify-center gap-6 text-sm font-black text-slate-500 uppercase tracking-widest">
+        <h1 className="mt-4 text-3xl md:text-4xl font-black text-slate-950">{quiz.title}</h1>
+        <p className="mt-4 text-base md:text-lg text-slate-500 leading-relaxed max-w-xl mx-auto">{quiz.description}</p>
+        <div className="mt-8 flex flex-wrap justify-center gap-4 md:gap-6 text-sm font-black text-slate-500 uppercase tracking-widest">
           <span className="inline-flex items-center gap-2 bg-slate-100 px-4 py-2 rounded-xl">
             <Clock3 className="size-4 text-orange-500" /> {quiz.timeLimit} menit
           </span>
@@ -169,15 +169,15 @@ export function QuizSession({ quiz }: { quiz: QuizDto }) {
 
   if (snapshot.matches("showingResult") || snapshot.matches("showingDiscussion")) {
     return (
-      <Card className="mx-auto max-w-4xl p-10 shadow-xl shadow-slate-200/50">
+      <Card className="mx-auto max-w-4xl p-6 md:p-10 shadow-xl shadow-slate-200/50">
         <div className="text-center">
-          <div className="mx-auto flex size-20 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
-            <CheckCircle2 className="size-10" />
+          <div className="mx-auto flex size-16 md:size-20 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+            <CheckCircle2 className="size-8 md:size-10" />
           </div>
-          <h1 className="mt-6 text-5xl font-black text-slate-950 uppercase tracking-tight">
+          <h1 className="mt-6 text-3xl md:text-5xl font-black text-slate-950 uppercase tracking-tight">
             Skor Kamu: {snapshot.context.score}
           </h1>
-          <p className="mt-4 text-xl font-bold text-slate-500">
+          <p className="mt-4 text-lg md:text-xl font-bold text-slate-500">
             {snapshot.context.score >= 80
               ? "Luar biasa! Pemahamanmu sudah sangat kuat."
               : "Kerja bagus! Terus asah kemampuanmu lagi."}

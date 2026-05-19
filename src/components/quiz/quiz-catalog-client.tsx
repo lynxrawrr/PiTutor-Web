@@ -52,7 +52,7 @@ export function QuizCatalogClient() {
             <h1 className="text-4xl font-black tracking-normal">
               Uji Kemampuanmu!
             </h1>
-            <p className="mt-4 max-w-3xl text-lg leading-8 text-orange-50">
+            <p className="mt-4 max-w-5xl text-lg leading-8 text-orange-50">
               Kerjakan kuis dari bank soal terlengkap. Kumpulkan poin, naikkan
               peringkatmu, dan buktikan kamu yang terbaik di kampus.
             </p>

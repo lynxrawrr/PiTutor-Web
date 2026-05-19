@@ -1,155 +1,105 @@
 # Pitutor
 
-Pitutor adalah web app peer-to-peer learning untuk mahasiswa dengan konsep "by students, for students".
+Pitutor adalah aplikasi web _peer-to-peer learning_ modern yang dirancang khusus untuk mahasiswa, mengusung konsep **"by students, for students"**. Platform ini memfasilitasi pembelajaran kolaboratif melalui _video courses_, sesi _mentoring 1-on-1_ secara real-time, dan bank soal/kuis interaktif.
 
 ## Tech Stack
 
-- Next.js App Router
-- TypeScript
-- Tailwind CSS
-- Prisma
-- PostgreSQL
-- Auth.js Credentials
-- XState
-- React Query
-- Zod
-- lucide-react
+Aplikasi ini dibangun menggunakan arsitektur full-stack modern:
 
-## Setup
+- **Framework:** Next.js 16 (App Router) & React 19
+- **Bahasa:** TypeScript
+- **Database:** PostgreSQL & Prisma ORM
+- **Authentication:** Auth.js (v5) - _Credentials Provider_
+- **State Management:** XState v5 (untuk alur belajar, kuis, dan booking)
+- **Data Fetching:** React Query & Server Actions
+- **Styling:** Tailwind CSS & Framer Motion (Animasi)
+- **Deployment:** Vercel (Frontend) & Supabase (Database PostgreSQL)
 
-Install dependency:
+## Setup & Instalasi Lokal
 
-```bash
-npm install
-```
+Ikuti langkah berikut untuk menjalankan proyek di mesin lokal Anda:
 
-Salin environment example:
+1. **Install Dependency:**
 
-```bash
-cp .env.example .env
-```
+   ```bash
+   npm install
+   ```
 
-Di PowerShell:
+2. **Setup Environment Variables:**
+   Salin file _template_ ke `.env`:
 
-```powershell
-Copy-Item .env.example .env
-```
+   ```bash
+   cp .env.example .env
+   ```
 
-Isi `DATABASE_URL`, lalu generate Prisma Client:
+   _(Untuk pengguna Windows PowerShell: `Copy-Item .env.example .env`)_
 
-```bash
-npm run db:generate
-```
+   Buka file `.env` dan pastikan `DATABASE_URL` mengarah ke database PostgreSQL lokal atau Supabase Anda. Anda juga perlu mengisi `AUTH_SECRET` (generate menggunakan `npx auth secret`).
 
-Sinkronkan schema dan seed data:
+3. **Setup Database dengan Migration & Seed Data:**
 
-```bash
-npm run db:push
-npm run db:seed
-```
+   ```bash
+   npm run db:deploy
+   npm run db:seed
+   ```
 
-Jalankan development server:
+   Jika database lokal Anda sudah pernah dibuat dengan `prisma db push` atau ingin reset total data lokal, gunakan:
 
-```bash
-npm run dev
-```
+   ```bash
+   npm run db:reset
+   npm run db:seed
+   ```
 
-Buka:
+   `db:reset` akan menghapus data dan apply ulang semua migration dari
+   `prisma/migrations`. Jalankan `db:seed` setelahnya untuk membuat ulang akun
+   admin awal.
 
-```text
-http://localhost:3000
-```
+4. **Jalankan Development Server:**
+   ```bash
+   npm run dev
+   ```
+   Aplikasi dapat diakses melalui `http://localhost:3000`.
 
-## Route Awal
+## Akun Demo (Seeding)
 
-- `/` landing page
-- `/dashboard/learner` dashboard learner
-- `/dashboard/learner/courses` katalog course
-- `/dashboard/learner/courses/[courseId]` detail course
-- `/dashboard/learner/courses/react-next/learn` course learning berbasis video embed dan XState
-- `/dashboard/learner/mentoring` mentoring catalog
-- `/dashboard/learner/mentoring/[mentorId]` mentor profile dan booking flow
-- `/dashboard/learner/quizzes` bank soal
-- `/dashboard/learner/quizzes/[quizId]` quiz session, review, score, pembahasan
-- `/dashboard/tutor` tutor dashboard
-- `/dashboard/tutor/courses` course management
-- `/dashboard/tutor/courses/new` create course
-- `/dashboard/tutor/courses/[courseId]/lessons/new` add lesson
-- `/dashboard/tutor/schedules` schedule management
-- `/dashboard/tutor/bookings` incoming bookings
-- `/dashboard/admin` admin dashboard
-- `/dashboard/admin/users` user management
-- `/dashboard/admin/courses` course review
-- `/dashboard/admin/mentors` tutor verification
-- `/dashboard/admin/quizzes` quiz management
+Script `seed.mjs` saat ini akan membersihkan data aplikasi dan membuat akun admin awal:
 
-## Auth.js Login
+- **Admin:** `admin@pitutor.edu`
+- **Password:** `password123`
 
-Pitutor memakai Auth.js Credentials dengan user tersimpan di PostgreSQL.
-Password seed semua akun demo:
+Admin hanya dibuat melalui seed database. Registrasi publik tetap tersedia di
+`/sign-up`, tetapi hanya untuk role **Learner** dan **Tutor**.
 
-```text
-password123
-```
+## Routing & Struktur Aplikasi
 
-Akun demo:
+Aplikasi dibagi menjadi 3 dashboard utama berdasarkan _Role_, dilindungi oleh Auth.js Session JWT dan fungsi `requireRole()`.
 
-```text
-Learner: ahmad@student.univ.edu
-Tutor: sarah@mentor.univ.edu
-Admin: admin@pitutor.edu
-```
+### Publik & Auth
 
-Route `/dashboard/*` dilindungi middleware Auth.js JWT. Role access juga dicek
-server-side lewat `requireRole()` di halaman dan Server Actions.
+- `/` - Landing Page interaktif
+- `/sign-in` & `/sign-up` - Halaman autentikasi. Sign-up hanya untuk Learner/Tutor.
+- `/onboarding` - Pemilihan Role (Learner/Tutor) untuk pengguna baru
 
-## API Routes
+### Dashboard Learner
 
-- `GET|POST /api/auth/[...nextauth]`
-- `POST /api/auth/register`
-- `GET /api/courses`
-- `GET /api/courses/[courseId]`
-- `GET /api/mentoring/mentors`
-- `GET /api/mentoring/schedules`
-- `GET /api/mentoring/bookings`
-- `GET /api/quizzes`
-- `POST /api/quizzes/[quizId]/submit`
-- `POST /api/upload`
-- `POST /api/webhooks/clerk` placeholder nonaktif karena MVP memakai Auth.js
+- `/dashboard/learner` - Ringkasan statistik dan Jadwal Terdekat (Real-time).
+- `/dashboard/learner/courses` - Katalog materi.
+- `/dashboard/learner/courses/[courseId]/learn` - Video player interaktif & form rating dengan XState.
+- `/dashboard/learner/mentoring` - Pencarian mentor & alur _booking_.
+- `/dashboard/learner/quizzes` - Sesi kuis interaktif.
 
-## Dokumentasi
+### Dashboard Tutor
 
-- `docs/STATECHARTS.md`
-- `docs/ASYNC_REACTIVE.md`
-- `docs/DATABASE_SCHEMA.md`
+_(Membutuhkan persetujuan Admin sebelum dapat diakses. Tutor baru akan diarahkan ke `/dashboard/tutor/pending`)_
 
-## Database Real
+- `/dashboard/tutor` - Ringkasan kelas dan jadwal.
+- `/dashboard/tutor/courses` - Manajemen silabus dan upload video.
+- `/dashboard/tutor/schedules` - Pengaturan waktu luang.
+- `/dashboard/tutor/bookings` - Konfirmasi sesi dari Learner.
 
-Project ini sekarang membaca data dashboard dari PostgreSQL melalui Prisma query layer:
+### Dashboard Admin
 
-- `src/lib/queries/course.queries.ts`
-- `src/lib/queries/mentoring.queries.ts`
-- `src/lib/queries/quiz.queries.ts`
-- `src/lib/queries/admin.queries.ts`
-
-Mutation utama juga sudah menulis ke database melalui Server Actions untuk:
-
-- Enroll course
-- Mark lesson complete
-- Create/update course
-- Submit course for admin review
-- Create/update lesson
-- Booking mentoring
-- Tutor accept/reject/complete booking
-- Submit mentor review
-- Submit quiz attempt dan calculate score
-- Create quiz category, quiz, question, option, dan pembahasan
-- Admin approve/reject course
-- Admin verify tutor
-
-## Catatan Auth
-
-Auth.js dikonfigurasi di `src/lib/auth.ts` dengan Credentials provider.
-User baru dibuat melalui `POST /api/auth/register`, password disimpan sebagai
-`passwordHash`, dan session JWT membawa `id`, `role`, serta `roleSelected`.
-
+- `/dashboard/admin` - Pusat kontrol platform.
+- `/dashboard/admin/users` - Pemantauan Role.
+- `/dashboard/admin/courses` - Verifikasi materi pengajaran (`WAITING_REVIEW`).
+- `/dashboard/admin/mentors` - **Tutor Verification**: Menerima/menyetujui profil tutor secara real-time.

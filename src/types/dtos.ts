@@ -55,8 +55,10 @@ export type BookingDto = {
   id: string;
   learnerName: string;
   mentorName: string;
+  mentorAvatar?: string | null;
   topic: string;
   schedule: string;
+  startsAt?: Date | null;
   status: "PENDING" | "ACCEPTED" | "REJECTED" | "COMPLETED" | "CANCELLED";
   meetingUrl?: string | null;
   rating?: number | null;
