@@ -1,7 +1,7 @@
 "use client";
 
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import type { FormEvent } from "react";
 import {
@@ -44,6 +44,7 @@ const roleOptions: Array<{
 
 export function AuthForm({ mode }: AuthFormProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -55,6 +56,11 @@ export function AuthForm({ mode }: AuthFormProps) {
   const [isPending, setIsPending] = useState(false);
 
   const isSignUp = mode === "sign-up";
+  const rawCallbackUrl = searchParams.get("callbackUrl");
+  const callbackUrl =
+    rawCallbackUrl?.startsWith("/") && !rawCallbackUrl.startsWith("//")
+      ? rawCallbackUrl
+      : "/dashboard";
 
   async function signInWithCredentials(
     nextEmail = email,
@@ -67,6 +73,7 @@ export function AuthForm({ mode }: AuthFormProps) {
       email: nextEmail,
       password: nextPassword,
       redirect: false,
+      callbackUrl,
     });
 
     setIsPending(false);
@@ -78,7 +85,7 @@ export function AuthForm({ mode }: AuthFormProps) {
     }
 
     toast.success("Berhasil masuk!");
-    router.push("/dashboard");
+    router.replace(callbackUrl);
     router.refresh();
   }
 
