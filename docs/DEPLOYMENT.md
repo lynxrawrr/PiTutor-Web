@@ -1,93 +1,201 @@
 # Deployment Guide: Pitutor
 
-Panduan ini menjelaskan cara deploy Pitutor ke Vercel dengan database PostgreSQL di Supabase, plus cara reset database saat development/staging.
+Panduan ini menjelaskan deploy Pitutor ke **Vercel** dengan **Supabase Postgres** untuk database dan **Supabase Storage** untuk upload file. Target akhirnya:
 
-## Status Project Saat Ini
+- Data aplikasi tersimpan di Supabase Postgres.
+- File upload seperti thumbnail/avatar/PDF tersimpan di Supabase Storage.
+- Vercel hanya menjalankan aplikasi Next.js, tidak menyimpan file upload.
+
+## 0. Prasyarat
+
+Install dan akun yang dibutuhkan:
+
+- Node.js 20+.
+- npm.
+- Git.
+- Akun Supabase.
+- Akun Vercel.
+- Repository GitHub/GitLab/Bitbucket.
+- PostgreSQL client optional untuk command seperti `pg_dump`/`pg_restore`.
+
+Install dependency project:
+
+```bash
+npm install
+```
+
+Package penting untuk deployment:
+
+- `@prisma/client`, `prisma`, `@prisma/adapter-pg`, `pg` untuk Supabase Postgres.
+- `next-auth` untuk Auth.js.
+- `@supabase/supabase-js` untuk Supabase Storage.
+
+Jika package Supabase Storage belum ada:
+
+```bash
+npm install @supabase/supabase-js
+```
+
+## 1. Status Project
 
 - Framework: Next.js App Router.
-- Database: Prisma 7 + PostgreSQL. URL database dibaca dari `prisma.config.ts`, bukan dari `url = env(...)` di `schema.prisma`.
+- Database: Prisma 7 + PostgreSQL.
+- Prisma datasource URL dibaca dari `prisma.config.ts` melalui `DATABASE_URL`.
+- Migration tersedia di `prisma/migrations/20260520000000_init`.
 - Auth: Auth.js/NextAuth v5 beta dengan Credentials Provider dan JWT session.
-- Migration: sudah ada initial migration di `prisma/migrations/20260520000000_init`. Workflow utama sekarang adalah `prisma migrate dev` untuk local dan `prisma migrate deploy` untuk staging/production.
-- Seed: `prisma/seed.mjs` saat ini membersihkan data aplikasi lalu membuat akun admin `admin@pitutor.edu` dengan password `password123`.
-- Upload file: `src/app/api/upload/route.ts` menulis ke `public/uploads`. Ini tidak persistent di Vercel. Untuk production, pindahkan upload thumbnail/avatar/PDF ke Supabase Storage atau service storage lain.
+- Register publik hanya untuk `LEARNER` dan `TUTOR`.
+- Admin hanya dibuat dari seed database.
+- Seed membuat `admin@pitutor.edu` dengan password `password123`.
+- Upload route `src/app/api/upload/route.ts` memakai Supabase Storage jika env storage tersedia. Fallback ke `public/uploads` hanya untuk local development; production akan error jika env storage belum lengkap.
 
-## 1. Buat Database Supabase
+## 2. Buat Project Supabase
 
-1. Buka Supabase Dashboard dan buat project baru.
-2. Masuk ke project, klik **Connect** atau **Project Settings > Database**.
-3. Siapkan dua connection string:
-   - Runtime Vercel: gunakan Supavisor Transaction pooler, biasanya port `6543`.
-   - Setup schema dari lokal: gunakan Supavisor Session pooler port `5432` atau Direct connection.
+1. Buka Supabase Dashboard.
+2. Buat project baru.
+3. Catat **Project Ref** dari URL project.
+4. Buka **Project Settings > API**.
+5. Simpan:
+   - `Project URL`
+   - `service_role key`
+6. Buka **Connect** atau **Project Settings > Database**.
+7. Siapkan dua connection string:
+   - **Session pooler port 5432** untuk migration/seed dari lokal.
+   - **Transaction pooler port 6543** untuk runtime Vercel.
+
+### Yang Dicopy dari Panel Supabase
+
+Jika di Supabase muncul panel seperti:
+
+```text
+Project URL
+Publishable key
+Direct connection string
+CLI setup commands
+Get Connected
+```
+
+Pilih seperti ini:
+
+| Item di Supabase                                 | Dipakai untuk                                  | Env Pitutor                                    |
+| ------------------------------------------------ | ---------------------------------------------- | ---------------------------------------------- |
+| **Project URL**                                  | URL project Supabase untuk Storage             | `SUPABASE_URL`                                 |
+| **Publishable key**                              | Tidak dipakai untuk upload server-side Pitutor | Jangan masukkan ke `SUPABASE_SERVICE_ROLE_KEY` |
+| **Direct connection string**                     | Boleh untuk migration/seed lokal               | `DATABASE_URL` lokal sementara                 |
+| **Get Connected**                                | Cari pooler connection string                  | `DATABASE_URL` Vercel dan migration            |
+| **service_role key** dari Project Settings > API | Upload server-side ke Storage                  | `SUPABASE_SERVICE_ROLE_KEY`                    |
+
+Detailnya:
+
+- Untuk `SUPABASE_URL`, copy **Project URL**.
+- Untuk `SUPABASE_SERVICE_ROLE_KEY`, jangan copy **Publishable key**. Buka **Project Settings > API**, lalu copy key dengan nama **service_role**.
+- Untuk migration/seed lokal, boleh copy **Direct connection string**. Ganti `[YOUR-PASSWORD]` dengan database password project.
+- Untuk Vercel runtime, klik **Get Connected**, cari **Transaction pooler** atau **Supavisor Transaction mode** port `6543`, lalu tambahkan `?pgbouncer=true` jika belum ada.
+- Untuk command Prisma dari lokal yang memakai pooler, klik **Get Connected**, cari **Session pooler** port `5432`.
+
+Contoh:
+
+```env
+# Untuk migration/seed dari terminal lokal
+DATABASE_URL="postgres://postgres.[PROJECT_REF]:[DB_PASSWORD]@[REGION].pooler.supabase.com:5432/postgres"
+
+# Untuk runtime Vercel
+DATABASE_URL="postgres://postgres.[PROJECT_REF]:[DB_PASSWORD]@[REGION].pooler.supabase.com:6543/postgres?pgbouncer=true"
+```
 
 Catatan:
 
-- Supabase merekomendasikan transaction pooler untuk serverless/auto-scaling runtime seperti Vercel.
-- Transaction pooler tidak mendukung prepared statements. Jika muncul error prepared statement saat memakai Prisma, tambahkan parameter `?pgbouncer=true` pada connection string, atau gunakan session pooler untuk command Prisma CLI.
-- Karena repo ini hanya membaca `DATABASE_URL`, gunakan value `DATABASE_URL` yang berbeda sesuai konteks: runtime Vercel memakai transaction pooler, sedangkan setup/reset database lokal memakai session/direct URL.
+- Untuk Vercel/serverless, gunakan transaction pooler port `6543`.
+- Untuk Prisma CLI migration/seed, gunakan session pooler port `5432` atau direct connection.
+- Jika password database berisi karakter spesial seperti `@`, `#`, `%`, `/`, atau `:`, lakukan URL encode.
 
-Contoh format:
+## 3. Buat Bucket Supabase Storage
 
-```env
-# Runtime Vercel
-DATABASE_URL="postgres://postgres.[PROJECT_REF]:[PASSWORD]@[REGION].pooler.supabase.com:6543/postgres?pgbouncer=true"
+1. Buka **Storage** di Supabase Dashboard.
+2. Klik **New bucket**.
+3. Nama bucket:
 
-# Local setup/reset command
-DATABASE_URL="postgres://postgres.[PROJECT_REF]:[PASSWORD]@[REGION].pooler.supabase.com:5432/postgres"
+```text
+pitutor-uploads
 ```
 
-## 2. Environment Variables Vercel
+4. Untuk MVP, aktifkan **Public bucket**.
 
-Tambahkan environment variables ini di Vercel Project Settings:
+Kenapa public bucket? Route upload saat ini mengembalikan public URL dengan `getPublicUrl()`. Jika bucket private, perlu implementasi signed URL tambahan.
 
-| Variable              | Contoh                                        | Keterangan                                                                                      |
-| --------------------- | --------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| `DATABASE_URL`        | `postgres://...:6543/postgres?pgbouncer=true` | Supabase transaction pooler untuk runtime Vercel.                                               |
-| `AUTH_SECRET`         | hasil `npx auth secret`                       | Wajib untuk Auth.js. Minimal 32 karakter random.                                                |
-| `AUTH_TRUST_HOST`     | `true`                                        | Aman diset eksplisit untuk reverse proxy/hosting. Kode juga sudah memakai `trustHost: true`.    |
-| `AUTH_URL`            | `https://pitutor.vercel.app`                  | Opsional di Auth.js v5, tapi berguna jika host inference bermasalah atau memakai custom domain. |
-| `NEXTAUTH_URL`        | `https://pitutor.vercel.app`                  | Compatibility variable untuk ekosistem NextAuth lama.                                           |
-| `NEXT_PUBLIC_APP_URL` | `https://pitutor.vercel.app`                  | Base URL publik aplikasi.                                                                       |
+Folder object yang dipakai aplikasi:
 
-Untuk generate secret:
+```text
+uploads/[timestamp]_[filename]
+```
+
+## 4. Environment Local
+
+Salin template:
+
+```bash
+cp .env.example .env
+```
+
+PowerShell:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+### Opsi A - Local DB dan Local Upload
+
+Gunakan ini untuk development biasa.
+
+```env
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/pitutor?schema=public"
+
+AUTH_SECRET="replace-with-random-secret"
+AUTH_URL="http://localhost:3000"
+NEXTAUTH_URL="http://localhost:3000"
+AUTH_TRUST_HOST="true"
+
+NEXT_PUBLIC_APP_URL="http://localhost:3000"
+
+SUPABASE_URL=""
+SUPABASE_SERVICE_ROLE_KEY=""
+SUPABASE_STORAGE_BUCKET="pitutor-uploads"
+```
+
+Dengan konfigurasi ini, `/api/upload` fallback ke `public/uploads` selama `NODE_ENV` bukan `production`.
+
+### Opsi B - Local App, Supabase DB, Supabase Storage
+
+Gunakan ini jika ingin local development sudah memakai Supabase.
+
+```env
+DATABASE_URL="postgres://postgres.[PROJECT_REF]:[DB_PASSWORD]@[REGION].pooler.supabase.com:5432/postgres"
+
+AUTH_SECRET="replace-with-random-secret"
+AUTH_URL="http://localhost:3000"
+NEXTAUTH_URL="http://localhost:3000"
+AUTH_TRUST_HOST="true"
+
+NEXT_PUBLIC_APP_URL="http://localhost:3000"
+
+SUPABASE_URL="https://[PROJECT_REF].supabase.co"
+SUPABASE_SERVICE_ROLE_KEY="[SUPABASE_SERVICE_ROLE_KEY]"
+SUPABASE_STORAGE_BUCKET="pitutor-uploads"
+```
+
+Generate `AUTH_SECRET`:
 
 ```bash
 npx auth secret
 ```
 
-## 3. Deploy ke Vercel
+## 5. Migration dan Seed Database
 
-1. Push project ke GitHub/GitLab/Bitbucket.
-2. Import repository di Vercel.
-3. Pilih framework preset **Next.js**.
-4. Set environment variables dari bagian sebelumnya untuk Production dan Preview.
-5. Gunakan build command berikut agar Prisma Client dibuat sebelum Next.js build:
-
-```bash
-npm run db:generate && npm run build
-```
-
-6. Deploy.
-
-Jika ingin build command tetap default Vercel, tambahkan script `postinstall` di `package.json`:
-
-```json
-{
-  "scripts": {
-    "postinstall": "prisma generate"
-  }
-}
-```
-
-## 4. Setup Schema dan Seed Supabase
-
-Gunakan migration untuk membuat schema database. Jalankan dari terminal lokal dengan connection string Session pooler port `5432` atau Direct connection.
-
-Jika database target masih kosong, langsung jalankan:
+Untuk database Supabase kosong, jalankan dari terminal lokal dengan connection string port `5432`.
 
 PowerShell:
 
 ```powershell
-$env:DATABASE_URL="postgres://postgres.[PROJECT_REF]:[PASSWORD]@[REGION].pooler.supabase.com:5432/postgres"
+$env:DATABASE_URL="postgres://postgres.[PROJECT_REF]:[DB_PASSWORD]@[REGION].pooler.supabase.com:5432/postgres"
 npm run db:deploy
 npm run db:seed
 Remove-Item Env:DATABASE_URL
@@ -96,71 +204,119 @@ Remove-Item Env:DATABASE_URL
 Bash:
 
 ```bash
-DATABASE_URL="postgres://postgres.[PROJECT_REF]:[PASSWORD]@[REGION].pooler.supabase.com:5432/postgres" npm run db:deploy
-DATABASE_URL="postgres://postgres.[PROJECT_REF]:[PASSWORD]@[REGION].pooler.supabase.com:5432/postgres" npm run db:seed
+DATABASE_URL="postgres://postgres.[PROJECT_REF]:[DB_PASSWORD]@[REGION].pooler.supabase.com:5432/postgres" npm run db:deploy
+DATABASE_URL="postgres://postgres.[PROJECT_REF]:[DB_PASSWORD]@[REGION].pooler.supabase.com:5432/postgres" npm run db:seed
 ```
 
-Jika database target sebelumnya sudah pernah dibuat dengan `prisma db push`, jangan langsung jalankan `migrate deploy` ke database yang sama karena tabel/enum sudah ada. Untuk development/staging, paling sederhana reset dulu dengan `npm run db:reset`, lalu jalankan `npm run db:seed`. Untuk production yang sudah berisi data penting, lakukan baseline migration dengan hati-hati sebelum memakai workflow migration.
-
-Setelah itu, buka URL Vercel dan login dengan:
+Seed membuat akun:
 
 ```text
 Email: admin@pitutor.edu
 Password: password123
 ```
 
-## 5. Workflow Migration Local
-
-Untuk development lokal, gunakan migration setiap kali schema berubah:
+Jika database pernah dibuat dengan `prisma db push`, jangan langsung jalankan `migrate deploy` karena tabel/enum sudah ada. Untuk staging/development, reset dulu:
 
 ```bash
-npm run db:migrate -- --name nama_perubahan
-```
-
-Contoh:
-
-```bash
-npm run db:migrate -- --name add_course_tags
-```
-
-Command ini membuat folder migration baru, apply ke database lokal, dan menjalankan generator Prisma.
-
-Untuk production/staging, jangan gunakan `migrate dev`. Gunakan:
-
-```bash
-npm run db:deploy
-```
-
-Jalankan seed hanya saat inisialisasi database kosong atau saat memang ingin reset data demo:
-
-```bash
+npm run db:reset
 npm run db:seed
 ```
 
-Catatan penting: `prisma migrate deploy` tidak melakukan reset database, tidak mengecek drift, dan memang ditujukan untuk production/staging.
+## 6. Environment Variables Vercel
 
-## 6. Cara Reset Database
+Tambahkan semua variable berikut di **Vercel Project Settings > Environment Variables** untuk Production dan Preview.
 
-Pilih sesuai kebutuhan. Semua opsi reset di bawah akan menghapus data. Gunakan hanya untuk development/staging atau saat memang ingin wipe production.
+```env
+DATABASE_URL="postgres://postgres.[PROJECT_REF]:[DB_PASSWORD]@[REGION].pooler.supabase.com:6543/postgres?pgbouncer=true"
 
-### Opsi A - Reset Data Aplikasi Saja
+AUTH_SECRET="[HASIL_NPX_AUTH_SECRET]"
+AUTH_TRUST_HOST="true"
+AUTH_URL="https://pitutor.vercel.app"
+NEXTAUTH_URL="https://pitutor.vercel.app"
+NEXT_PUBLIC_APP_URL="https://pitutor.vercel.app"
 
-Script seed saat ini sudah menghapus data model aplikasi lalu membuat admin baru.
-
-```bash
-npm run db:seed
+SUPABASE_URL="https://[PROJECT_REF].supabase.co"
+SUPABASE_SERVICE_ROLE_KEY="[SUPABASE_SERVICE_ROLE_KEY]"
+SUPABASE_STORAGE_BUCKET="pitutor-uploads"
 ```
 
-Gunakan ini jika schema masih benar dan Anda hanya ingin kembali ke data awal.
+Jika memakai custom domain, ganti:
 
-### Opsi B - Reset Dengan Migrations
+```text
+https://pitutor.vercel.app
+```
 
-Gunakan ini untuk development/staging jika ingin drop schema, apply ulang semua migration, lalu membuat ulang data seed.
+dengan domain production Anda.
+
+Keamanan:
+
+- Jangan commit `.env`.
+- Jangan memberi prefix `NEXT_PUBLIC_` pada `SUPABASE_SERVICE_ROLE_KEY`.
+- `SUPABASE_SERVICE_ROLE_KEY` hanya boleh dipakai server-side.
+
+## 7. Konfigurasi Build Vercel
+
+Di Vercel:
+
+- Framework Preset: **Next.js**
+- Install Command:
+
+```bash
+npm install
+```
+
+- Build Command:
+
+```bash
+npm run db:generate && npm run build
+```
+
+- Output Directory: default Next.js.
+
+Kenapa `db:generate`? Prisma Client perlu dibuat sebelum Next.js build.
+
+## 8. Deploy
+
+1. Push branch ke repository.
+2. Import repository di Vercel.
+3. Isi environment variables.
+4. Pastikan migration dan seed sudah dijalankan ke Supabase.
+5. Deploy.
+6. Buka URL Vercel.
+
+Login admin:
+
+```text
+admin@pitutor.edu
+password123
+```
+
+## 9. Verifikasi Upload Supabase Storage
+
+1. Login ke aplikasi.
+2. Jalankan fitur yang memakai upload, misalnya avatar, thumbnail, atau module PDF.
+3. Setelah upload, buka Supabase Dashboard.
+4. Masuk ke **Storage > pitutor-uploads**.
+5. Pastikan file muncul di folder `uploads/`.
+6. Cek response `/api/upload`; jika sukses production, response berisi:
+
+```json
+{
+  "url": "https://[PROJECT_REF].supabase.co/storage/v1/object/public/pitutor-uploads/uploads/...",
+  "storage": "supabase"
+}
+```
+
+Jika response `"storage": "local"`, artinya aplikasi sedang berjalan di development lokal tanpa env Supabase Storage. Di production, env storage yang tidak lengkap akan membuat upload gagal agar file tidak diam-diam ditulis ke filesystem Vercel.
+
+## 10. Cara Reset Supabase Development/Staging
+
+Hati-hati: perintah ini menghapus data.
 
 PowerShell:
 
 ```powershell
-$env:DATABASE_URL="postgres://postgres.[PROJECT_REF]:[PASSWORD]@[REGION].pooler.supabase.com:5432/postgres"
+$env:DATABASE_URL="postgres://postgres.[PROJECT_REF]:[DB_PASSWORD]@[REGION].pooler.supabase.com:5432/postgres"
 npm run db:reset
 npm run db:seed
 Remove-Item Env:DATABASE_URL
@@ -169,58 +325,73 @@ Remove-Item Env:DATABASE_URL
 Bash:
 
 ```bash
-DATABASE_URL="postgres://postgres.[PROJECT_REF]:[PASSWORD]@[REGION].pooler.supabase.com:5432/postgres" npm run db:reset
-DATABASE_URL="postgres://postgres.[PROJECT_REF]:[PASSWORD]@[REGION].pooler.supabase.com:5432/postgres" npm run db:seed
+DATABASE_URL="postgres://postgres.[PROJECT_REF]:[DB_PASSWORD]@[REGION].pooler.supabase.com:5432/postgres" npm run db:reset
+DATABASE_URL="postgres://postgres.[PROJECT_REF]:[DB_PASSWORD]@[REGION].pooler.supabase.com:5432/postgres" npm run db:seed
 ```
 
-### Opsi C - Reset Cepat Tanpa Migration History
+Reset ini tidak menghapus file di Supabase Storage. Jika ingin membersihkan storage juga, hapus object dari Supabase Dashboard > Storage.
 
-Gunakan hanya untuk prototyping cepat ketika migration history tidak penting.
+## 11. Migrasi File Lama dari `public/uploads`
+
+Jika sebelumnya ada file lokal di `public/uploads`:
+
+1. Upload file tersebut ke Supabase Storage bucket `pitutor-uploads`, folder `uploads/`.
+2. Update URL lama di database.
+
+Contoh URL lama:
+
+```text
+/uploads/1779208239744_download.jpeg
+```
+
+Ganti menjadi:
+
+```text
+https://[PROJECT_REF].supabase.co/storage/v1/object/public/pitutor-uploads/uploads/1779208239744_download.jpeg
+```
+
+Field yang mungkin perlu dicek:
+
+- `User.avatarUrl`
+- `Course.thumbnailUrl`
+- `Lesson.moduleUrl`
+
+## 12. Troubleshooting
+
+### Upload masih masuk lokal
+
+Pastikan env ini ada di Vercel:
+
+```env
+SUPABASE_URL="https://[PROJECT_REF].supabase.co"
+SUPABASE_SERVICE_ROLE_KEY="[SUPABASE_SERVICE_ROLE_KEY]"
+SUPABASE_STORAGE_BUCKET="pitutor-uploads"
+```
+
+### File berhasil upload tapi URL tidak bisa dibuka
+
+Pastikan bucket `pitutor-uploads` adalah public bucket. Jika bucket private, route perlu diubah memakai signed URL.
+
+### Prisma connection error di Vercel
+
+Pastikan `DATABASE_URL` Vercel memakai transaction pooler port `6543` dan parameter `?pgbouncer=true`.
+
+### Migration gagal karena tabel sudah ada
+
+Database kemungkinan pernah dibuat dengan `db push`. Untuk staging/development, gunakan:
 
 ```bash
-npx prisma db push --force-reset
+npm run db:reset
 npm run db:seed
 ```
 
-### Opsi D - Hard Reset dari Supabase SQL Editor
-
-Gunakan hanya jika schema sudah kacau dan Anda paham konsekuensinya.
-
-```sql
-drop schema if exists public cascade;
-create schema public;
-
-grant usage on schema public to postgres, anon, authenticated, service_role;
-grant all on schema public to postgres, service_role;
-
-alter default privileges in schema public grant all on tables to postgres, service_role;
-alter default privileges in schema public grant all on sequences to postgres, service_role;
-alter default privileges in schema public grant all on functions to postgres, service_role;
-```
-
-Setelah hard reset, jalankan lagi:
-
-```bash
-npm run db:deploy
-npm run db:seed
-```
-
-## 7. Checklist Setelah Deploy
-
-- Login `/sign-in` dengan akun admin seed.
-- Cek `/dashboard/admin`.
-- Buat user learner/tutor dari `/sign-up`.
-- Verifikasi tutor dari admin sebelum mengakses dashboard tutor penuh.
-- Coba course/video embed.
-- Coba booking mentoring dan quiz.
-- Jangan mengandalkan upload lokal `public/uploads` di Vercel. Pindahkan ke Supabase Storage untuk production.
+Untuk production berisi data penting, lakukan baseline migration dengan hati-hati.
 
 ## Referensi Resmi
 
+- Supabase Storage: https://supabase.com/docs/guides/storage
+- Supabase Storage upload: https://supabase.com/docs/guides/storage/uploads/standard-uploads
 - Supabase + Prisma: https://supabase.com/docs/guides/database/prisma
-- Supabase connection strings: https://supabase.com/docs/guides/database/connecting-to-postgres
-- Supabase Prisma troubleshooting: https://supabase.com/docs/guides/database/prisma/prisma-troubleshooting
-- Prisma migrate deploy: https://www.prisma.io/docs/cli/migrate/deploy
-- Prisma migrate reset: https://www.prisma.io/docs/cli/migrate/reset
+- Vercel upload guidance: https://vercel.com/guides/how-to-upload-and-store-files-with-vercel
 - Vercel environment variables: https://vercel.com/docs/environment-variables
 - Auth.js deployment: https://authjs.dev/getting-started/deployment
