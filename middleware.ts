@@ -12,9 +12,15 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  const secureCookie =
+    request.nextUrl.protocol === "https:" ||
+    process.env.AUTH_URL?.startsWith("https://") ||
+    process.env.NEXTAUTH_URL?.startsWith("https://");
+
   const token = await getToken({
     req: request,
     secret: process.env.AUTH_SECRET,
+    secureCookie,
   });
 
   if (!token) {
