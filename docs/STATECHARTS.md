@@ -39,7 +39,8 @@ Flow ini mengatur pengalaman learner saat membuka halaman belajar course, memili
 | `savingProgress`       | Server Action `markLessonComplete` sedang berjalan.                                                                                     |
 | `videoError`           | URL video tidak valid atau embed gagal disiapkan.                                                                                       |
 | `courseCompleted`      | Semua lesson selesai, learner masuk ke layar completion dan rating.                                                                     |
-| `certificateAvailable` | Placeholder state setelah user memilih certificate.                                                                                     |
+| `submittingRating`     | Server Action `submitCourseRating` sedang menyimpan rating/review.                                                                      |
+| `ratingSubmitted`      | Rating/review course berhasil dikirim.                                                                                                  |
 
 ### Events
 
@@ -57,10 +58,12 @@ Flow ini mengatur pengalaman learner saat membuka halaman belajar course, memili
 | `SAVE_SUCCESS`      | `savingProgress`                                                | Kembali ke `lessonList`.                                      |
 | `SAVE_FAILED`       | `savingProgress`                                                | Kembali ke `watchingVideo` dan simpan error.                  |
 | `COURSE_COMPLETED`  | `lessonList`, `loadingVideo`, `watchingVideo`, `savingProgress` | Masuk ke `courseCompleted`.                                   |
+| `SUBMIT_RATING`     | `courseCompleted`                                               | Masuk ke `submittingRating` dan clear error.                  |
+| `RATING_SUCCESS`    | `submittingRating`                                              | Masuk ke `ratingSubmitted`.                                   |
+| `RATING_FAILED`     | `submittingRating`                                              | Kembali ke `courseCompleted` dan simpan error.                |
 | `BACK_TO_LESSONS`   | `loadingVideo`, `watchingVideo`, `videoError`                   | Kembali ke `lessonList`.                                      |
-| `BACK_TO_COURSE`    | `lessonList`, `courseCompleted`, `certificateAvailable`         | Kembali ke `courseOverview`.                                  |
+| `BACK_TO_COURSE`    | `lessonList`, `courseCompleted`, `ratingSubmitted`              | Kembali ke `courseOverview`.                                  |
 | `RETRY`             | `videoError`                                                    | Mencoba ulang load video.                                     |
-| `VIEW_CERTIFICATE`  | `courseCompleted`                                               | Masuk ke `certificateAvailable`.                              |
 
 ### Integrasi dengan Component
 
@@ -77,7 +80,9 @@ Di `CourseLearningDemo`:
    - Local state `completedLessonIds` diperbarui.
    - Jika semua lesson selesai, kirim `COURSE_COMPLETED`.
    - Jika belum selesai, kirim `SAVE_SUCCESS`.
-7. Jika action gagal, kirim `SAVE_FAILED`.
+7. Saat state `courseCompleted`, component langsung melakukan conditional render layar completion + form rating/review.
+8. Saat learner submit rating, component mengirim `SUBMIT_RATING`, menjalankan `submitCourseRating`, lalu mengirim `RATING_SUCCESS` atau `RATING_FAILED`.
+9. Jika action progress gagal, kirim `SAVE_FAILED`.
 
 ### Efek Database
 

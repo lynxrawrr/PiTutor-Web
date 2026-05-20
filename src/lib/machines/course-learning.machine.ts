@@ -18,7 +18,9 @@ export type CourseLearningEvent =
   | { type: "SAVE_FAILED"; error?: string }
   | { type: "COURSE_COMPLETED" }
   | { type: "MORE_LESSONS_AVAILABLE" }
-  | { type: "VIEW_CERTIFICATE" }
+  | { type: "SUBMIT_RATING" }
+  | { type: "RATING_SUCCESS" }
+  | { type: "RATING_FAILED"; error?: string }
   | { type: "BACK_TO_COURSE" }
   | { type: "BACK_TO_LESSONS" }
   | { type: "RETRY" }
@@ -126,11 +128,17 @@ export const courseLearningMachine = setup({
     },
     courseCompleted: {
       on: {
-        VIEW_CERTIFICATE: "certificateAvailable",
+        SUBMIT_RATING: { target: "submittingRating", actions: "clearError" },
         BACK_TO_COURSE: "courseOverview",
       },
     },
-    certificateAvailable: {
+    submittingRating: {
+      on: {
+        RATING_SUCCESS: "ratingSubmitted",
+        RATING_FAILED: { target: "courseCompleted", actions: "setError" },
+      },
+    },
+    ratingSubmitted: {
       on: {
         BACK_TO_COURSE: "courseOverview",
       },

@@ -7,21 +7,18 @@ import {
   CheckCircle2,
   FileText,
   Loader2,
-  PlayCircle,
   Star,
   Trophy,
 } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useMemo, useState, useTransition } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useEffect, useMemo, useState } from "react";
+import { motion } from "framer-motion";
 import { toast } from "sonner";
 
 import { VideoEmbedPlayer } from "@/components/video/video-embed-player";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { Skeleton } from "@/components/ui/skeleton";
 import { markLessonComplete, submitCourseRating } from "@/lib/actions/course.actions";
 import type { CourseDto } from "@/types/dtos";
 import { courseLearningMachine } from "@/lib/machines/course-learning.machine";
@@ -38,8 +35,6 @@ export function CourseLearningDemo({ course }: { course: CourseDto }) {
   // Rating State
   const [rating, setRating] = useState(0);
   const [review, setReview] = useState("");
-  const [isPendingRating, startRatingTransition] = useTransition();
-  const [ratingSubmitted, setRatingSubmitted] = useState(false);
 
   useEffect(() => {
     if (!lessons[0]) {
@@ -95,6 +90,14 @@ export function CourseLearningDemo({ course }: { course: CourseDto }) {
       return "Course selesai";
     }
 
+    if (snapshot.matches("submittingRating")) {
+      return "Mengirim rating";
+    }
+
+    if (snapshot.matches("ratingSubmitted")) {
+      return "Rating terkirim";
+    }
+
     if (snapshot.matches("videoError")) {
       return "Video bermasalah";
     }
@@ -137,22 +140,31 @@ export function CourseLearningDemo({ course }: { course: CourseDto }) {
       return;
     }
 
-    startRatingTransition(async () => {
-      try {
-        await submitCourseRating({
-          enrollmentId: course.enrollmentId!,
-          rating,
-          review,
-        });
-        toast.success("Terima kasih atas reviewnya!");
-        setRatingSubmitted(true);
-      } catch (error) {
-        toast.error("Gagal mengirim review.");
-      }
-    });
+    send({ type: "SUBMIT_RATING" });
+
+    try {
+      await submitCourseRating({
+        enrollmentId: course.enrollmentId!,
+        rating,
+        review,
+      });
+      toast.success("Terima kasih atas reviewnya!");
+      send({ type: "RATING_SUCCESS" });
+    } catch (caughtError) {
+      const message =
+        caughtError instanceof Error
+          ? caughtError.message
+          : "Gagal mengirim review.";
+      toast.error(message);
+      send({ type: "RATING_FAILED", error: message });
+    }
   }
 
-  if (snapshot.matches("courseCompleted")) {
+  if (
+    snapshot.matches("courseCompleted") ||
+    snapshot.matches("submittingRating") ||
+    snapshot.matches("ratingSubmitted")
+  ) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4 md:p-8 selection:bg-blue-100">
         <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
@@ -179,7 +191,7 @@ export function CourseLearningDemo({ course }: { course: CourseDto }) {
           </div>
 
           <div className="bg-white p-8 md:p-12">
-            {!ratingSubmitted ? (
+            {!snapshot.matches("ratingSubmitted") ? (
               <div className="space-y-10">
                 <div className="text-center">
                   <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-6">Beri Rating Pengalaman Belajar</h3>
@@ -223,12 +235,18 @@ export function CourseLearningDemo({ course }: { course: CourseDto }) {
                   />
                 </div>
 
+                {snapshot.context.error ? (
+                  <div className="rounded-2xl bg-orange-50 p-4 text-sm font-bold text-orange-700">
+                    {snapshot.context.error}
+                  </div>
+                ) : null}
+
                 <Button
                   className="w-full h-14 rounded-2xl bg-slate-900 font-black shadow-xl shadow-slate-950/10 transition-all hover:bg-blue-600 border-none text-white"
                   onClick={handleRatingSubmit}
-                  disabled={isPendingRating || rating === 0}
+                  disabled={snapshot.matches("submittingRating") || rating === 0}
                 >
-                  {isPendingRating ? (
+                  {snapshot.matches("submittingRating") ? (
                     <Loader2 className="size-5 animate-spin mr-2" />
                   ) : (
                     <CheckCircle2 className="size-5 mr-2" />
