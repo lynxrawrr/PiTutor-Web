@@ -31,8 +31,12 @@ export default async function EditLessonPage({
         <ArrowLeft className="size-4" aria-hidden="true" />
         Kembali ke Detail Course
       </Link>
-      
-      <TutorCourseForm mode="lesson" courseId={courseId} initialData={lesson} />
+
+      <TutorCourseForm
+        mode="lesson"
+        courseId={courseId}
+        initialData={{ ...lesson, description: lesson.description ?? "" }}
+      />
     </div>
   );
 }

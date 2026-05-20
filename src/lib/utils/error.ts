@@ -2,9 +2,9 @@ import { z } from "zod";
 
 export function formatZodError(error: unknown): string {
   if (error instanceof z.ZodError) {
-    return error.errors[0]?.message ?? "Input tidak valid.";
+    return error.issues[0]?.message ?? "Input tidak valid.";
   }
-  
+
   if (error instanceof Error) {
     try {
       const parsed = JSON.parse(error.message);
@@ -16,6 +16,6 @@ export function formatZodError(error: unknown): string {
     }
     return error.message;
   }
-  
+
   return "Terjadi kesalahan yang tidak diketahui.";
 }

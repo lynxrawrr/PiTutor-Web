@@ -7,7 +7,12 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { createCourse, createLesson, updateCourse, updateLesson } from "@/lib/actions/course.actions";
+import {
+  createCourse,
+  createLesson,
+  updateCourse,
+  updateLesson,
+} from "@/lib/actions/course.actions";
 import { COURSE_CATEGORIES } from "@/lib/constants";
 import { formatZodError } from "@/lib/utils/error";
 
@@ -29,7 +34,11 @@ type TutorCourseFormProps = {
   };
 };
 
-export function TutorCourseForm({ mode, courseId, initialData }: TutorCourseFormProps) {
+export function TutorCourseForm({
+  mode,
+  courseId,
+  initialData,
+}: TutorCourseFormProps) {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -51,7 +60,10 @@ export function TutorCourseForm({ mode, courseId, initialData }: TutorCourseForm
       if (thumbnailFile && thumbnailFile.size > 0) {
         const uploadData = new FormData();
         uploadData.append("file", thumbnailFile);
-        const res = await fetch("/api/upload", { method: "POST", body: uploadData });
+        const res = await fetch("/api/upload", {
+          method: "POST",
+          body: uploadData,
+        });
         if (res.ok) {
           const { url } = await res.json();
           uploadedThumbnailUrl = url;
@@ -65,7 +77,10 @@ export function TutorCourseForm({ mode, courseId, initialData }: TutorCourseForm
       if (moduleFile && moduleFile.size > 0) {
         const uploadData = new FormData();
         uploadData.append("file", moduleFile);
-        const res = await fetch("/api/upload", { method: "POST", body: uploadData });
+        const res = await fetch("/api/upload", {
+          method: "POST",
+          body: uploadData,
+        });
         if (res.ok) {
           const { url } = await res.json();
           uploadedModuleUrl = url;
@@ -78,7 +93,11 @@ export function TutorCourseForm({ mode, courseId, initialData }: TutorCourseForm
         const courseData = {
           ...data,
           category: String(formData.get("category") ?? ""),
-          level: (formData.get("level") as "BEGINNER" | "INTERMEDIATE" | "ADVANCED") ?? "BEGINNER",
+          level:
+            (formData.get("level") as
+              | "BEGINNER"
+              | "INTERMEDIATE"
+              | "ADVANCED") ?? "BEGINNER",
           thumbnailUrl: uploadedThumbnailUrl,
         };
 
@@ -129,7 +148,8 @@ export function TutorCourseForm({ mode, courseId, initialData }: TutorCourseForm
             {mode === "course" ? "Master Course" : "Lesson Module"}
           </p>
           <h1 className="mt-2 text-3xl font-black text-slate-950">
-            {initialData ? "Edit" : (mode === "course" ? "Rancang" : "Tambah")} {mode === "course" ? "Course" : "Materi"}
+            {initialData ? "Edit" : mode === "course" ? "Rancang" : "Tambah"}{" "}
+            {mode === "course" ? "Course" : "Materi"}
           </h1>
         </div>
 
@@ -144,13 +164,17 @@ export function TutorCourseForm({ mode, courseId, initialData }: TutorCourseForm
               defaultValue={initialData?.title}
               className="mt-2 h-12 w-full rounded-2xl border border-slate-200 bg-slate-50/30 px-4 font-medium outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-600/5"
               placeholder={
-                mode === "course" ? "Contoh: Struktur Data Dasar" : "Contoh: Pengenalan Array"
+                mode === "course"
+                  ? "Contoh: Struktur Data Dasar"
+                  : "Contoh: Pengenalan Array"
               }
             />
           </label>
 
           <label className="block">
-            <span className="text-sm font-bold text-slate-600">Deskripsi Singkat</span>
+            <span className="text-sm font-bold text-slate-600">
+              Deskripsi Singkat
+            </span>
             <textarea
               name="description"
               required
@@ -163,7 +187,9 @@ export function TutorCourseForm({ mode, courseId, initialData }: TutorCourseForm
           {mode === "course" ? (
             <div className="grid gap-4 md:grid-cols-2">
               <label className="block">
-                <span className="text-sm font-bold text-slate-600">Kategori</span>
+                <span className="text-sm font-bold text-slate-600">
+                  Kategori
+                </span>
                 <select
                   name="category"
                   required
@@ -172,12 +198,16 @@ export function TutorCourseForm({ mode, courseId, initialData }: TutorCourseForm
                 >
                   <option value="">Pilih Kategori</option>
                   {COURSE_CATEGORIES.map((cat) => (
-                    <option key={cat} value={cat}>{cat}</option>
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
                   ))}
                 </select>
               </label>
               <label className="block">
-                <span className="text-sm font-bold text-slate-600">Tingkat Kesulitan</span>
+                <span className="text-sm font-bold text-slate-600">
+                  Tingkat Kesulitan
+                </span>
                 <select
                   name="level"
                   defaultValue={initialData?.level}
@@ -201,7 +231,7 @@ export function TutorCourseForm({ mode, courseId, initialData }: TutorCourseForm
                 <input
                   name="thumbnailUrl"
                   type="hidden"
-                  defaultValue={initialData?.thumbnailUrl}
+                  defaultValue={initialData?.thumbnailUrl ?? ""}
                 />
               </label>
             </div>
@@ -221,7 +251,9 @@ export function TutorCourseForm({ mode, courseId, initialData }: TutorCourseForm
                 />
               </label>
               <label className="block">
-                <span className="text-sm font-bold text-slate-600">Urutan Tampil</span>
+                <span className="text-sm font-bold text-slate-600">
+                  Urutan Tampil
+                </span>
                 <input
                   name="order"
                   required
@@ -244,11 +276,13 @@ export function TutorCourseForm({ mode, courseId, initialData }: TutorCourseForm
                 <input
                   name="moduleUrl"
                   type="hidden"
-                  defaultValue={initialData?.moduleUrl}
+                  defaultValue={initialData?.moduleUrl ?? ""}
                 />
               </label>
               <label className="block">
-                <span className="text-sm font-bold text-slate-600">Durasi (Menit)</span>
+                <span className="text-sm font-bold text-slate-600">
+                  Durasi (Menit)
+                </span>
                 <input
                   name="duration"
                   required
@@ -279,7 +313,11 @@ export function TutorCourseForm({ mode, courseId, initialData }: TutorCourseForm
           ) : (
             <Plus className="size-5" />
           )}
-          {initialData ? "Simpan Perubahan" : (mode === "course" ? "Publikasikan Course" : "Simpan Materi")}
+          {initialData
+            ? "Simpan Perubahan"
+            : mode === "course"
+              ? "Publikasikan Course"
+              : "Simpan Materi"}
         </Button>
       </form>
     </Card>

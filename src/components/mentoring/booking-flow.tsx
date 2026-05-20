@@ -6,7 +6,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { bookMentoringSession } from "@/lib/actions/mentoring.actions";
 import type { MentorDto } from "@/types/dtos";
@@ -31,7 +31,9 @@ export function BookingFlow({ mentor }: { mentor: MentorDto }) {
   const [topic, setTopic] = useState("");
   const [error, setError] = useState<string | null>(null);
   const selectedSlotId = snapshot.context.slotId;
-  const selectedSlot = mentor.schedules.find((slot) => slot.id === selectedSlotId);
+  const selectedSlot = mentor.schedules.find(
+    (slot) => slot.id === selectedSlotId,
+  );
 
   function startBooking() {
     send({ type: "SELECT_MENTOR", mentorId: mentor.id });
@@ -82,7 +84,12 @@ export function BookingFlow({ mentor }: { mentor: MentorDto }) {
               </span>
             </p>
           </div>
-          <Badge variant="purple" className="px-3 py-1 text-[10px] font-black uppercase tracking-widest">60 Menit</Badge>
+          <Badge
+            variant="purple"
+            className="px-3 py-1 text-[10px] font-black uppercase tracking-widest"
+          >
+            60 Menit
+          </Badge>
         </div>
 
         {snapshot.matches("selectingSchedule") ? (
@@ -101,7 +108,9 @@ export function BookingFlow({ mentor }: { mentor: MentorDto }) {
                 <span className="block text-[10px] font-black uppercase text-slate-400">
                   {slot.day}
                 </span>
-                <span className="mt-0.5 block text-base font-black">{slot.date}</span>
+                <span className="mt-0.5 block text-base font-black">
+                  {slot.date}
+                </span>
                 <span className="mt-1 block text-[11px] font-bold text-slate-500">
                   {slot.time}
                 </span>
@@ -137,8 +146,13 @@ export function BookingFlow({ mentor }: { mentor: MentorDto }) {
 
         {snapshot.matches("submittingBooking") ? (
           <div className="mt-10 flex flex-col items-center justify-center py-10 text-center">
-            <Loader2 className="size-10 animate-spin text-purple-600" aria-hidden="true" />
-            <p className="mt-4 font-black text-slate-400 uppercase tracking-widest text-xs">Mengirim booking...</p>
+            <Loader2
+              className="size-10 animate-spin text-purple-600"
+              aria-hidden="true"
+            />
+            <p className="mt-4 font-black text-slate-400 uppercase tracking-widest text-xs">
+              Mengirim booking...
+            </p>
           </div>
         ) : null}
 
@@ -151,7 +165,8 @@ export function BookingFlow({ mentor }: { mentor: MentorDto }) {
               Booking Terkirim
             </h3>
             <p className="mt-2 text-sm font-medium text-slate-500 leading-relaxed">
-              Mentor akan meninjau permintaan Anda. <br /> Cek status secara berkala di dashboard.
+              Mentor akan meninjau permintaan Anda. <br /> Cek status secara
+              berkala di dashboard.
             </p>
           </div>
         ) : null}
@@ -165,7 +180,8 @@ export function BookingFlow({ mentor }: { mentor: MentorDto }) {
               Sesi Terjadwal
             </h3>
             <p className="mt-2 text-sm font-medium text-slate-500 leading-relaxed">
-              Link Google Meet akan segera tersedia. <br /> Bersiaplah untuk sesi belajar Anda!
+              Link Google Meet akan segera tersedia. <br /> Bersiaplah untuk
+              sesi belajar Anda!
             </p>
           </div>
         ) : null}
@@ -185,18 +201,32 @@ export function BookingFlow({ mentor }: { mentor: MentorDto }) {
       </div>
 
       <div className="mt-8 border-t border-slate-50 pt-6">
-        {snapshot.matches("viewingMentors") || snapshot.matches("viewingProfile") ? (
-          <Button variant="purple" className="w-full h-14 rounded-2xl font-black text-base shadow-xl shadow-purple-600/20" onClick={startBooking}>
+        {snapshot.matches("viewingMentors") ||
+        snapshot.matches("viewingProfile") ? (
+          <Button
+            variant="purple"
+            className="w-full h-14 rounded-2xl font-black text-base shadow-xl shadow-purple-600/20"
+            onClick={startBooking}
+          >
             Mulai Booking
           </Button>
         ) : null}
 
         {snapshot.matches("selectingSchedule") ? (
           <div className="grid grid-cols-2 gap-3">
-            <Button variant="ghost" className="h-12 rounded-xl font-bold" onClick={() => send({ type: "BACK" })}>
+            <Button
+              variant="ghost"
+              className="h-12 rounded-xl font-bold"
+              onClick={() => send({ type: "BACK" })}
+            >
               Kembali
             </Button>
-            <Button variant="purple" className="h-12 rounded-xl font-black" disabled={!selectedSlotId} onClick={() => send({ type: "PROCEED" })}>
+            <Button
+              variant="purple"
+              className="h-12 rounded-xl font-black"
+              disabled={!selectedSlotId}
+              onClick={() => send({ type: "PROCEED" })}
+            >
               Lanjut
             </Button>
           </div>
@@ -204,7 +234,11 @@ export function BookingFlow({ mentor }: { mentor: MentorDto }) {
 
         {snapshot.matches("fillingForm") ? (
           <div className="grid grid-cols-2 gap-3">
-            <Button variant="ghost" className="h-12 rounded-xl font-bold" onClick={() => send({ type: "BACK" })}>
+            <Button
+              variant="ghost"
+              className="h-12 rounded-xl font-bold"
+              onClick={() => send({ type: "BACK" })}
+            >
               Kembali
             </Button>
             <Button
@@ -228,7 +262,7 @@ export function BookingFlow({ mentor }: { mentor: MentorDto }) {
           </Button>
         ) : null}
 
-        {(snapshot.matches("completed") || snapshot.matches("reviewed")) ? (
+        {snapshot.matches("completed") || snapshot.matches("reviewed") ? (
           <Button
             className="w-full h-12 rounded-xl font-black"
             variant="purple"
@@ -238,18 +272,19 @@ export function BookingFlow({ mentor }: { mentor: MentorDto }) {
             {snapshot.matches("reviewed") ? "Review Terkirim" : "Kirim Review"}
           </Button>
         ) : null}
-        
-        {(snapshot.matches("waitingConfirmation")) ? (
-          <Button
-            className="w-full h-12 rounded-xl font-black"
-            variant="secondary"
-            asChild
+
+        {snapshot.matches("waitingConfirmation") ? (
+          <a
+            href="/dashboard/learner/mentoring"
+            className={buttonVariants({
+              variant: "secondary",
+              className: "w-full h-12 rounded-xl font-black",
+            })}
           >
-            <a href="/dashboard/learner/mentoring">Lihat Status Booking</a>
-          </Button>
+            Lihat Status Booking
+          </a>
         ) : null}
       </div>
     </Card>
   );
 }
-

@@ -10,6 +10,7 @@ export type MentoringBookingEvent =
   | { type: "SELECT_MENTOR"; mentorId: string }
   | { type: "VIEW_SCHEDULE" }
   | { type: "SELECT_SLOT"; slotId: string }
+  | { type: "PROCEED" }
   | { type: "SUBMIT" }
   | { type: "SUCCESS" }
   | { type: "FAILED"; error?: string }
@@ -34,12 +35,15 @@ export const mentoringBookingMachine = setup({
       error: null,
     }),
     setSlot: assign({
-      slotId: ({ event }) => (event.type === "SELECT_SLOT" ? event.slotId : null),
+      slotId: ({ event }) =>
+        event.type === "SELECT_SLOT" ? event.slotId : null,
       error: null,
     }),
     setError: assign({
       error: ({ event }) =>
-        "error" in event && event.error ? event.error : "Booking gagal diproses.",
+        "error" in event && event.error
+          ? event.error
+          : "Booking gagal diproses.",
     }),
   },
 }).createMachine({
@@ -65,7 +69,8 @@ export const mentoringBookingMachine = setup({
     },
     selectingSchedule: {
       on: {
-        SELECT_SLOT: { target: "fillingForm", actions: "setSlot" },
+        SELECT_SLOT: { actions: "setSlot" },
+        PROCEED: "fillingForm",
         BACK: "viewingProfile",
         CHOOSE_ANOTHER: "viewingMentors",
       },

@@ -1,7 +1,13 @@
 "use client";
 
 import { useMachine } from "@xstate/react";
-import { ArrowLeft, ArrowRight, CheckCircle2, Clock3, Loader2 } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  CheckCircle2,
+  Clock3,
+  Loader2,
+} from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -19,7 +25,7 @@ export function QuizSession({ quiz }: { quiz: QuizDto }) {
   const [snapshot, send] = useMachine(quizMachine);
   const [questionIndex, setQuestionIndex] = useState(0);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Real-time Timer State
   const [timeLeft, setTimeLeft] = useState((quiz.timeLimit ?? 15) * 60);
 
@@ -57,7 +63,9 @@ export function QuizSession({ quiz }: { quiz: QuizDto }) {
       toast.success("Kuis berhasil diselesaikan!");
     } catch (caughtError) {
       const message =
-        caughtError instanceof Error ? caughtError.message : "Submit quiz gagal.";
+        caughtError instanceof Error
+          ? caughtError.message
+          : "Submit quiz gagal.";
       setError(message);
       send({ type: "SUBMIT_FAILED", error: message });
       toast.error(message);
@@ -65,7 +73,7 @@ export function QuizSession({ quiz }: { quiz: QuizDto }) {
   }, [quiz.id, selectedAnswers, send, score]);
 
   useEffect(() => {
-    if (!snapshot.matches("answeringQuestions")) return;
+    if (!snapshot.matches("answering")) return;
 
     const timer = setInterval(() => {
       setTimeLeft((prev) => {
@@ -94,12 +102,19 @@ export function QuizSession({ quiz }: { quiz: QuizDto }) {
     send({ type: "LOAD_SUCCESS" });
   }
 
-  if (snapshot.matches("selectingCategory") || snapshot.matches("loadingQuestions")) {
+  if (
+    snapshot.matches("selectingCategory") ||
+    snapshot.matches("loadingQuestions")
+  ) {
     return (
       <Card className="mx-auto max-w-3xl p-8 text-center shadow-xl shadow-slate-200/50">
         <Badge variant="orange">{quiz.category}</Badge>
-        <h1 className="mt-4 text-3xl md:text-4xl font-black text-slate-950">{quiz.title}</h1>
-        <p className="mt-4 text-base md:text-lg text-slate-500 leading-relaxed max-w-xl mx-auto">{quiz.description}</p>
+        <h1 className="mt-4 text-3xl md:text-4xl font-black text-slate-950">
+          {quiz.title}
+        </h1>
+        <p className="mt-4 text-base md:text-lg text-slate-500 leading-relaxed max-w-xl mx-auto">
+          {quiz.description}
+        </p>
         <div className="mt-8 flex flex-wrap justify-center gap-4 md:gap-6 text-sm font-black text-slate-500 uppercase tracking-widest">
           <span className="inline-flex items-center gap-2 bg-slate-100 px-4 py-2 rounded-xl">
             <Clock3 className="size-4 text-orange-500" /> {quiz.timeLimit} menit
@@ -108,7 +123,10 @@ export function QuizSession({ quiz }: { quiz: QuizDto }) {
             {quiz.questions.length} Butir Soal
           </span>
         </div>
-        <Button className="mt-10 h-14 px-10 rounded-2xl bg-orange-500 hover:bg-orange-600 font-black shadow-xl shadow-orange-500/20" onClick={startQuiz}>
+        <Button
+          className="mt-10 h-14 px-10 rounded-2xl bg-orange-500 hover:bg-orange-600 font-black shadow-xl shadow-orange-500/20"
+          onClick={startQuiz}
+        >
           Mulai Kuis Sekarang
         </Button>
       </Card>
@@ -136,7 +154,11 @@ export function QuizSession({ quiz }: { quiz: QuizDto }) {
           ))}
         </div>
         <div className="mt-10 flex justify-between border-t border-slate-100 pt-8">
-          <Button variant="secondary" className="rounded-xl px-8 h-12" onClick={() => send({ type: "BACK" })}>
+          <Button
+            variant="secondary"
+            className="rounded-xl px-8 h-12"
+            onClick={() => send({ type: "BACK" })}
+          >
             Kembali
           </Button>
           <Button
@@ -162,12 +184,19 @@ export function QuizSession({ quiz }: { quiz: QuizDto }) {
         <h1 className="mt-6 text-2xl font-black text-slate-950">
           Menghitung skor...
         </h1>
-        <p className="mt-2 text-slate-500 font-medium text-lg">Tunggu sebentar, kami sedang memvalidasi jawabanmu.</p>
+        <p className="mt-2 text-slate-500 font-medium text-lg">
+          Tunggu sebentar, kami sedang memvalidasi jawabanmu.
+        </p>
       </Card>
     );
   }
 
-  if (snapshot.matches("showingResult") || snapshot.matches("showingDiscussion")) {
+  if (
+    snapshot.matches("showingResult") ||
+    snapshot.matches("showingDiscussion")
+  ) {
+    const resultScore = snapshot.context.score ?? score;
+
     return (
       <Card className="mx-auto max-w-4xl p-6 md:p-10 shadow-xl shadow-slate-200/50">
         <div className="text-center">
@@ -175,10 +204,10 @@ export function QuizSession({ quiz }: { quiz: QuizDto }) {
             <CheckCircle2 className="size-8 md:size-10" />
           </div>
           <h1 className="mt-6 text-3xl md:text-5xl font-black text-slate-950 uppercase tracking-tight">
-            Skor Kamu: {snapshot.context.score}
+            Skor Kamu: {resultScore}
           </h1>
           <p className="mt-4 text-lg md:text-xl font-bold text-slate-500">
-            {snapshot.context.score >= 80
+            {resultScore >= 80
               ? "Luar biasa! Pemahamanmu sudah sangat kuat."
               : "Kerja bagus! Terus asah kemampuanmu lagi."}
           </p>
@@ -186,29 +215,42 @@ export function QuizSession({ quiz }: { quiz: QuizDto }) {
 
         {snapshot.matches("showingDiscussion") ? (
           <div className="mt-12 space-y-6">
-            <h3 className="text-2xl font-black text-slate-950 border-b pb-4">Pembahasan Soal</h3>
+            <h3 className="text-2xl font-black text-slate-950 border-b pb-4">
+              Pembahasan Soal
+            </h3>
             {quiz.questions.map((item, index) => {
               const selectedOption = item.options.find(
                 (option) => option.id === selectedAnswers[item.id],
               );
 
               return (
-                <div key={item.id} className="rounded-3xl border border-slate-100 bg-slate-50/30 p-6">
+                <div
+                  key={item.id}
+                  className="rounded-3xl border border-slate-100 bg-slate-50/30 p-6"
+                >
                   <p className="text-lg font-black text-slate-900 leading-relaxed">
                     {index + 1}. {item.prompt}
                   </p>
                   <div className="mt-4 flex gap-2">
-                    <span className="text-sm font-black uppercase text-slate-400">Jawabanmu:</span>
-                    <span className={cn(
-                      "text-sm font-black",
-                      selectedOption?.isCorrect ? "text-emerald-600" : "text-red-500"
-                    )}>
+                    <span className="text-sm font-black uppercase text-slate-400">
+                      Jawabanmu:
+                    </span>
+                    <span
+                      className={cn(
+                        "text-sm font-black",
+                        selectedOption?.isCorrect
+                          ? "text-emerald-600"
+                          : "text-red-500",
+                      )}
+                    >
                       {selectedOption?.text ?? "Belum dijawab"}
                     </span>
                   </div>
                   <div className="mt-4 rounded-2xl bg-emerald-50/50 p-4 ring-1 ring-emerald-100/50">
                     <p className="text-sm font-bold text-emerald-800 leading-relaxed">
-                      <span className="font-black uppercase tracking-wider text-[10px] mr-2 opacity-60">Penjelasan:</span>
+                      <span className="font-black uppercase tracking-wider text-[10px] mr-2 opacity-60">
+                        Penjelasan:
+                      </span>
                       {item.explanation}
                     </p>
                   </div>
@@ -222,7 +264,10 @@ export function QuizSession({ quiz }: { quiz: QuizDto }) {
           {snapshot.matches("showingDiscussion") ? (
             <Link
               href="/dashboard/learner/quizzes"
-              className={buttonVariants({ variant: "secondary", className: "h-14 rounded-2xl px-10 font-black" })}
+              className={buttonVariants({
+                variant: "secondary",
+                className: "h-14 rounded-2xl px-10 font-black",
+              })}
             >
               Kembali ke Bank Soal
             </Link>
@@ -256,7 +301,9 @@ export function QuizSession({ quiz }: { quiz: QuizDto }) {
       <Card className="p-8 shadow-lg shadow-slate-200/50 border-slate-100">
         <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between border-b border-slate-50 pb-6">
           <div>
-            <Badge variant="orange" className="font-black tracking-widest">{quiz.category}</Badge>
+            <Badge variant="orange" className="font-black tracking-widest">
+              {quiz.category}
+            </Badge>
             <h1 className="mt-3 text-3xl font-black text-slate-950 tracking-tight">
               {quiz.title}
             </h1>
@@ -295,15 +342,21 @@ export function QuizSession({ quiz }: { quiz: QuizDto }) {
                   )}
                 >
                   <div className="flex items-center gap-4">
-                    <span className={cn(
-                      "flex size-10 items-center justify-center rounded-xl border-2 font-black transition-colors",
-                      selected ? "border-orange-500 bg-orange-500 text-white" : "border-slate-200 bg-slate-50 text-slate-500 group-hover:border-orange-200"
-                    )}>
+                    <span
+                      className={cn(
+                        "flex size-10 items-center justify-center rounded-xl border-2 font-black transition-colors",
+                        selected
+                          ? "border-orange-500 bg-orange-500 text-white"
+                          : "border-slate-200 bg-slate-50 text-slate-500 group-hover:border-orange-200",
+                      )}
+                    >
                       {String.fromCharCode(65 + index)}
                     </span>
                     <span className="font-bold text-lg">{option.text}</span>
                   </div>
-                  {selected ? <CheckCircle2 className="size-6 text-orange-600" /> : null}
+                  {selected ? (
+                    <CheckCircle2 className="size-6 text-orange-600" />
+                  ) : null}
                 </button>
               );
             })}
@@ -345,7 +398,9 @@ export function QuizSession({ quiz }: { quiz: QuizDto }) {
 
       <div className="space-y-6">
         <Card className="p-6 border-slate-100 shadow-xl shadow-slate-200/50">
-          <h2 className="font-black text-slate-950 uppercase tracking-widest text-xs">Navigasi Soal</h2>
+          <h2 className="font-black text-slate-950 uppercase tracking-widest text-xs">
+            Navigasi Soal
+          </h2>
           <div className="mt-4 space-y-2">
             <div className="flex justify-between text-xs font-black">
               <span className="text-slate-400">PROGRESS</span>
@@ -374,15 +429,21 @@ export function QuizSession({ quiz }: { quiz: QuizDto }) {
         </Card>
 
         <Card className="p-6 bg-slate-950 text-white border-none shadow-2xl">
-          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500">Info Kuis</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500">
+            Info Kuis
+          </p>
           <div className="mt-4 space-y-4">
             <div className="flex items-center gap-3">
               <div className="size-2 rounded-full bg-blue-500" />
-              <p className="text-sm font-bold text-slate-300">{quiz.totalQuestions} Pertanyaan</p>
+              <p className="text-sm font-bold text-slate-300">
+                {quiz.totalQuestions} Pertanyaan
+              </p>
             </div>
             <div className="flex items-center gap-3">
               <div className="size-2 rounded-full bg-orange-500" />
-              <p className="text-sm font-bold text-slate-300">Waktu: {quiz.timeLimit} Menit</p>
+              <p className="text-sm font-bold text-slate-300">
+                Waktu: {quiz.timeLimit} Menit
+              </p>
             </div>
           </div>
         </Card>

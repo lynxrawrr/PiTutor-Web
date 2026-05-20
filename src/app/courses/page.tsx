@@ -8,6 +8,8 @@ import { buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { getCourseList } from "@/lib/queries/course.queries";
 
+export const dynamic = "force-dynamic";
+
 export default async function PublicCoursesPage() {
   const courses = await getCourseList();
 

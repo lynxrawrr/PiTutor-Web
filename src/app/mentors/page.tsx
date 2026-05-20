@@ -8,6 +8,8 @@ import { buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { getMentorList } from "@/lib/queries/mentoring.queries";
 
+export const dynamic = "force-dynamic";
+
 export default async function PublicMentorsPage() {
   const mentors = await getMentorList();
 

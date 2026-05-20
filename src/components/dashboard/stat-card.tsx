@@ -8,7 +8,7 @@ type StatCardProps = {
   value: string;
   label: string;
   helper: string;
-  tone?: "blue" | "green" | "orange" | "purple";
+  tone?: "blue" | "green" | "orange" | "purple" | "cyan";
 };
 
 const toneClasses = {
