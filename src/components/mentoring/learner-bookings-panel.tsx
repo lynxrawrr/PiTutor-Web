@@ -77,6 +77,11 @@ export function LearnerBookingsPanel() {
             <p className="mt-1 text-sm font-semibold text-slate-500">
               {booking.mentorName} - {booking.schedule}
             </p>
+            {booking.durationMinutes ? (
+              <p className="mt-2 text-xs font-black uppercase tracking-widest text-purple-600">
+                Durasi {booking.durationMinutes} menit
+              </p>
+            ) : null}
             {booking.meetingUrl ? (
               <a
                 href={booking.meetingUrl}

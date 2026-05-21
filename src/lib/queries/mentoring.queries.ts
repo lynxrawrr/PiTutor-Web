@@ -77,6 +77,13 @@ function formatScheduleTime(startsAt: Date, endsAt: Date) {
   return `${formatter.format(startsAt)} - ${formatter.format(endsAt)}`;
 }
 
+function getScheduleDurationMinutes(startsAt: Date, endsAt: Date) {
+  return Math.max(
+    1,
+    Math.round((endsAt.getTime() - startsAt.getTime()) / 60_000),
+  );
+}
+
 function mapMentor(mentor: MentorWithRelations): MentorDto {
   const completedBookings = mentor.bookings || [];
   const totalReviews = completedBookings.length;
@@ -103,6 +110,10 @@ function mapMentor(mentor: MentorWithRelations): MentorDto {
       date: formatScheduleDate(schedule.startsAt),
       day: formatScheduleDay(schedule.startsAt),
       time: formatScheduleTime(schedule.startsAt, schedule.endsAt),
+      durationMinutes: getScheduleDurationMinutes(
+        schedule.startsAt,
+        schedule.endsAt,
+      ),
     })),
   };
 }
@@ -123,6 +134,12 @@ function mapBooking(booking: BookingWithRelations): BookingDto {
     topic: booking.topic,
     schedule,
     startsAt: booking.schedule?.startsAt ?? null,
+    durationMinutes: booking.schedule
+      ? getScheduleDurationMinutes(
+          booking.schedule.startsAt,
+          booking.schedule.endsAt,
+        )
+      : null,
     status: booking.status,
     meetingUrl: booking.meetingUrl,
     rating: booking.rating,
@@ -227,6 +244,10 @@ export async function getTutorSchedules() {
     time: formatScheduleTime(schedule.startsAt, schedule.endsAt),
     startsAt: schedule.startsAt,
     endsAt: schedule.endsAt,
+    durationMinutes: getScheduleDurationMinutes(
+      schedule.startsAt,
+      schedule.endsAt,
+    ),
     isBooked: schedule.isBooked,
   }));
 }

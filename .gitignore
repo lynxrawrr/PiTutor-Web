@@ -47,3 +47,6 @@ next-env.d.ts
 # Deployment
 /DEPLOYMENT.md
 !docs/DEPLOYMENT.md
+
+# Docs
+/docs

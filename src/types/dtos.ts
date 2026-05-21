@@ -48,6 +48,7 @@ export type MentorDto = {
     date: string;
     day: string;
     time: string;
+    durationMinutes: number;
   }[];
 };
 
@@ -59,6 +60,7 @@ export type BookingDto = {
   topic: string;
   schedule: string;
   startsAt?: Date | null;
+  durationMinutes?: number | null;
   status: "PENDING" | "ACCEPTED" | "REJECTED" | "COMPLETED" | "CANCELLED";
   meetingUrl?: string | null;
   rating?: number | null;

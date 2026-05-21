@@ -38,6 +38,9 @@ export default async function TutorSchedulesPage() {
               {schedule.date}
             </h2>
             <p className="mt-2 font-semibold text-slate-500">{schedule.time}</p>
+            <p className="mt-2 text-xs font-black uppercase tracking-widest text-purple-600">
+              Durasi {schedule.durationMinutes} menit
+            </p>
             <p className="mt-4 flex items-center gap-2 text-sm font-bold text-slate-400">
               <CalendarCheck2 className="size-4" aria-hidden="true" />
               {schedule.mentorName}

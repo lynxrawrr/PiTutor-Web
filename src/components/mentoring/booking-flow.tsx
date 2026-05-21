@@ -35,6 +35,9 @@ export function BookingFlow({ mentor }: { mentor: MentorDto }) {
   const selectedSlot = mentor.schedules.find(
     (slot) => slot.id === selectedSlotId,
   );
+  const durationLabel = selectedSlot
+    ? `${selectedSlot.durationMinutes} Menit`
+    : "Pilih Slot";
 
   function startBooking() {
     send({ type: "SELECT_MENTOR", mentorId: mentor.id });
@@ -89,7 +92,7 @@ export function BookingFlow({ mentor }: { mentor: MentorDto }) {
             variant="purple"
             className="px-3 py-1 text-[10px] font-black uppercase tracking-widest"
           >
-            60 Menit
+            {durationLabel}
           </Badge>
         </div>
 
@@ -115,6 +118,9 @@ export function BookingFlow({ mentor }: { mentor: MentorDto }) {
                 <span className="mt-1 block text-[11px] font-bold text-slate-500">
                   {slot.time}
                 </span>
+                <span className="mt-1 block text-[10px] font-black uppercase tracking-wider text-purple-500">
+                  {slot.durationMinutes} menit
+                </span>
               </button>
             ))}
           </div>
@@ -136,6 +142,7 @@ export function BookingFlow({ mentor }: { mentor: MentorDto }) {
             <div className="rounded-xl bg-purple-50 p-4 text-xs font-bold text-purple-700">
               <CalendarDays className="mr-2 inline size-4" aria-hidden="true" />
               {selectedSlot?.date}, {selectedSlot?.time}
+              {selectedSlot ? ` (${selectedSlot.durationMinutes} menit)` : ""}
             </div>
             {error ? (
               <div className="rounded-xl bg-orange-50 p-3 text-xs font-bold text-orange-700">
